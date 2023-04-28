@@ -1,0 +1,218 @@
+---
+title: "Taller 2 Regresiones"
+author: "Diego Alexander Torres"
+date: "Noviembre de 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Ejercicios
+
+1. Grafique la recta correspondiente a la ecuacion Y = 2X +1 al graficar los
+puntos correspondientes a X = 0, 1 y 2. De el punto de cruce con el eje
+Y y la pendiente para la recta.
+
+```{r}
+x <- c(0,1,2)
+y <- (2*x) + 1
+
+model1 <- lm(y~x)
+plot(x,y, main = "Modelo", col=factor(x))
+abline(model1, col="blue")
+dev.off()
+```
+
+
+
+2. De la ecuacion y la grafica para una recta con interseccion con el eje Y
+igual a 3 y pendiente igual a ????1.
+
+```{r }
+x <- c(1, 2, 3, 4, 5)  #Puntos ejemplo
+y <- 3-x
+
+plot(x, y)
+abline(a = 3, b = -1, col="red", main = "Y = 3 - X")
+
+```
+
+3. Cual es la diferencia entre modelos matematicos deterministas y probabilistas?
+
+```{r }
+
+print(paste("El coeficiente de correlaci?n de Pearson entre las variables que representan la altura de las parejas es de:", round(cor(x,y),2)))
+```
+
+4. (Privacion de sue?o). Se realizo un estudio para determinar los efectos de
+la privacion de sue?o en la capacidad de personas para resolver problemas
+cuando no duermen. Un total de 10 personas participaron en el estudio,
+dos en cada uno de cinco niveles de privacion de sue?o: 8, 12, 16, 20 y
+24 horas. Despues del periodo de privacion de sue?o, a cada persona se
+le aplico un conjunto de problemas adicionales sencillos, registrandose el
+numero de errores.
+
+a) Use una grafica de dispersion para graficar los datos. La suposicion
+de una relacion lineal entre X y Y es razonable?
+
+```{r }
+
+x <- c(8, 8, 12, 12, 16, 16, 20, 20, 24, 24)
+y <- c(8, 6, 6, 10, 8, 14, 14, 12, 16, 12)
+
+plot(x, y, col = factor(x), main = "Horas sue?o vs N? errores", xlab = "horas sin dormir", ylab = "N? errores")
+model4 <- lm(y~x)
+abline(model4)
+summary(model4)
+```
+Efectivamente la relaci?n parece lineal.
+
+b) Cual es la ecuacion de prediccion de minimos cuadrados?
+
+```{r}
+print("Y = 3 + 0.475X ")
+```
+
+c) Use la ecuacion de prediccion para predecir el numero de errores para
+una persona que no ha dormido durante 10 horas.
+
+```{r}
+y10 <- 3+(0.475*10)
+print(y10)
+```
+
+
+5. Que tan bueno es usted para hacer estimaciones? Para probar la capacidad
+de una persona para estimar tamanos, se le mostraron 10 diferentes
+objetos y se le pidio estimar su longitud o diametro. A continuacion se
+midio el objeto y los resultados se registraron en la tabla siguiente.
+
+a) Encuentre la recta de regresion de minimos cuadrados para predecir
+la medida real como funcion de la medicion estimada.
+
+```{r}
+x <- c(7, 9.5, 7.5, 4, 14.5, 3.75, 42, 2.75, 10, 3.5)
+y <- c(6, 10.25, 6.75, 4.25, 15.75, 5, 41.5, 3.75, 9.25, 4.75)
+model5 <- lm(y~x)
+abline(model5)
+summary(model5)
+
+```
+```{r}
+print("Y = 0.5457 + 0.9741X ")
+```
+
+b) Grafique los puntos y la recta ajustada. Le parece razonable la
+suposicion de una relacion lineal?
+
+```{r}
+plot(x, y)
+abline(a = 0.5457, b = 0.9741, col="red", main = "Y = 0.5457 + 0.9741X")
+```
+
+6. En los datos siguientes, y corresponde a los salarios mensuales y x es el
+promedio obtenido por los estudiantes que terminaron la licenciatura de
+administracion con especialidad en sistemas de informacion.
+
+
+a) Indica la prueba t que haya una relacion significante entre promedio
+y salario mensual?
+
+
+```{r}
+x <- c(2.6, 3.4, 3.6, 3.2, 3.5, 2.9)
+y <- c(3000, 3600, 4000, 3500, 3900, 3600)
+
+model6 <- lm(y~x)
+summary(model6)
+```
+Efectivamente existe relación entre las variables, el p-valor en la prueba t del parámetro B1 indica que este no es igual a 0.
+
+b) Pruebe si la relacion es signicante usando la prueba F. Cual es la
+conclusion? Use alpha = 0.05
+
+
+Rta/ el p-valor es menor a alpha = 0.05, por lo tanto se rechaza H0 y se afirma que existe relación entre las variables.
+
+c) De la tabla ANOVA.
+
+```{r}
+aov(y~x)
+```
+
+
+7. En Estados Unidos casi todo el sistema de tranvias usa vagones electricos
+que corren sobre vias a nivel de la calle. La Administracion de Transito
+Federal afirma que el tranvia es uno de los medios de transporte mas
+seguros, ya que la tasa de accidentes es 0.99 accidentes por millon de
+millas-pasajero en comparacion con 2.29 en los autobuses. En los datos
+siguientes se dan las millas de via y la cantidad de pasajeros transportados
+en los dias laborables, en miles, de seis sistemas de tranvias (USA Today,
+7 de enero 2003).
+
+
+a) Use estos datos para obtener la ecuacion de regresion estimada que
+podria emplearse para predecir la cantidad de pasajeros dadas las
+millas de vias.
+
+
+```{r}
+x <- c(15, 17, 38, 21, 47, 31, 34)
+y <- c(15, 35, 81, 31, 75, 30, 42)
+
+model7 <- lm(y~x)
+summary(model7)
+```
+
+
+b) Proporciona la ecuacion de regresion estimada un buen ajuste? Explique.
+
+
+c) Obtenga un intervalo de 95% de confianza para la media de la cantidad
+de pasajeros transportados en los dias laborables en los sistemas
+de tranvias que tienen 30 millas de vias.
+
+```{r}
+
+```
+
+d) Suponga que Charlotte esta considerando la construccion de un sistema
+de tranvia de 30 millas de vias. De un intervalo de prediccion de
+95% para la cantidad de pasajeros transportada en un dia laborable
+por el sistema Charlotte. >Cree usted que el intervalo de prediccion
+que desarrollo pueda ser util a los que estan planeando Charlotte para
+anticipar la cantidad de pasajeros en un dia laborable en su sistema
+de tranvia? Explique
+
+
+
+8. Una aplicacion importante del analisis de regresion a la contaduria es la
+estimacion de costos. Con datos sobre volumen de produccion y costos
+y empleando el metodo de minimos cuadrados para obtener la ecuacion
+de regresion estimada que relacione volumen de produccion y costos, los
+contadores pueden estimar los costos correspondientes a un determinado
+volumen de produccion. Considere la siguiente muestra de datos sobre
+volumen de produccion y costos totales de una operacion de fabricacion.
+
+
+a) Con estos datos obtenga la ecuacion de regresion estimada para
+pronosticar los costos totales dado un volumen de produccion.
+
+```{r}
+x <- c(400, 450, 550, 600, 700, 750)
+y <- c(4000, 5000, 5400, 5900, 6400, 7000)
+
+model8 <- lm(y~x)
+summary(model8)
+```
+
+b) Cual es el costo por unidad producida?
+
+c) Calcule el coeficiente de determinacion. Que porcentaje de la variacion
+en los costos totales puede ser explicada por el volumen de produccion?
+
+d) De acuerdo con el programa de produccion de la empresa, el mes
+proximo se deberian producir 500 unidades. Cual es el costo total
+estimado de esta operacion?

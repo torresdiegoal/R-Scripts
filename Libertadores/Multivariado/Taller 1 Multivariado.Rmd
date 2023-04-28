@@ -1,0 +1,225 @@
+---
+title: "Taller 1 Multivariado"
+author: "Diego Torres"
+date: "Febrero de 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+### **Estudio climatico**
+
+Se tiene una base de datos mensual entre mayo de 1983 y diciembre de 2008 con informacion relacionada a contaminación del aire a nivel global, en donde se tienen datos de concentraciones de contaminantes, medidas de temperatura, indices, etc.La descripción de las variables es la siguiente:
+
+**Year:** el año de la observacion.\
+**Month:** el mes de la observacion.\
+**Temp:** la diferencia en grados centigrados entre la temperatura promedio global en ese periodo y el valor de referencia. Estos datos fueron suministrados por la Unidad de Investigacion Climatica de la University of East Anglia.\
+**CO2, N2O, CH4, CFC.11, CFC.12:** concentraciones atmosfericas de dioxido de carbono (CO2), oxido nitroso (N2O), metano (CH4), triclorofluorometano (CCl3F; mas conocido como CFC-11) and diclorodifluorometano (CCl2F2; mas conocido como CFC-12), respectivamente. CFC.11 y CFC.12 son expresadas en ppbv (partes por billon de volumen), mientras que CO2, N2O y CH4 son expresados en ppmv (partes por millon de volumen, es decir, 397 ppmv de CO2 significa que ese CO2 constituye 397 millonesimas partes del volumen total de la atmosfera). Estos datos provienen de ESRL/NOAA Division Global de Monitoreo.\
+**Aerosols:**  la profundidad óptica media del aerosol estratosferico a 550 nm. Esta variable es asociada a la actividad volcanica y al material piroclastico acomulado en la atmosfera, lo cual afecta la cantidad de energía solar que es reflejada de vuelta al espacio. Los datos fueron suministrados por el Instituto Godard de Estudios Espaciales de la NASA.\
+**TSI:** el total de irradiacion solar (TSI) en
+W/m2 (la tasa a la que la energia del sol es depositada por unidad de area). Debido a las manchas solares y otros fenomenos similares, la cantidad de energia emitida por el sol varia sustancialmente con el tiempo. La información fue obtenida de el proyecto web SOLARIS-HEPPA.\
+**MEI:** indice multivariado de oscilación meridional de El Niño (MEI), una medida que indica la fuerza de oscilación de los fenomenos de El Nino/La Nina en el hemisferio sur (Son fenomenos climáticos que ocurren en el pacifico sur que afecta temperaturas globales). Los datos provienen del ESRL/NOAA División de Ciencias Fisicas.\
+
+A continuación, un resumen de los datos.
+```{r, echo=FALSE}
+
+#data <- read.csv("climate_change.CSV", sep =",")
+data <- read.csv("D:/Disco D/R/Datos/Multivariado/climate_change.CSV", sep =",")
+
+data$Year <- as.factor(data$Year)
+data$Month <- as.factor(data$Month)
+print(str(data))
+print(summary(data))
+```
+
+```{r}
+library(ggplot2)
+ggplot(data, aes(x = Year, y = Temp, colour = Month)) +
+  geom_point() + 
+  scale_x_discrete(name="Years", breaks = c(seq(1983, 2008, 3))) + 
+  scale_y_continuous(name="Temperature °C", limits=c(-0.3, 0.8)) + 
+  theme(axis.line = element_line(colour = "grey", 
+                      size = 1, linetype = "solid")) + 
+  ggtitle("Difference in Global temperature between 1983 and 2008")
+```
+
+
+
+
+El grafico indica una marcada tendencia de ascenso de los  niveles de temperatura mundial con respecto a un valor de referencia, los colores son dados por el promedio mensual de cada año, mostrando que los primeros meses del año suelen ser más calidos.Vamos a ver la insidencia de algunos contaminantes y otros fenómenos climaticos en la prediccion de estos ascensos de la temperatura.
+
+Ahora, vamos a ver la relacion entre las demas variables cualitativas.Para esto,  se obtendrá la matriz de covarianza, la cual nos permite ver la varianza de cada variable en la diagonal principal. Mientras que los demás valores son la covarianza e indican la relación de dependencia entre cada par de variables de la matriz. Si ambas aumentan o disminuyen, la covarianza es positiva, mientras que si una variable tiende a aumentar y la otra no, la covarianza sera negativa. La covarianza es similar a la correlación, pero cuando esta ultima se calcula, los datos están estandarizados. Por lo tanto, la covarianza se expresa en unidades que varían con los datos y no se convierte a una escala estandarizada de 1 negativo a +1 como sí ocurre en la correlación. 
+```{r,warning=FALSE,message=FALSE,error=FALSE}
+
+library(dplyr)
+data. <- select(data, MEI:Temp)
+round(cov(data.), 3)
+```
+
+
+Se observa de la matriz que hay una fuerte relación de dependencia entre los contaminantes principales de la atmosfera. Para mirar un poco más la relación de dependencia, utilizaremos un grafico de correlación.Posteriormente, un grafico que nos indicara la distribucion de cada variable, el valor de la correlación y si es significante o no.
+
+```{r,warning=FALSE,message=FALSE,error=FALSE}
+library(corrplot)
+corrplot(cor(data.), type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
+```
+
+
+```{r,warning=FALSE,message=FALSE,error=FALSE}
+library("PerformanceAnalytics")
+chart.Correlation(data., histogram=TRUE, pch=19)
+```
+
+
+Del ultimo grafico podemos observar que hay dos contaminantes, el CO2 y el N2O ( correlación de 0.75 y 0.74 con respecto a temp), que son altamente correlacionados al delta de temperatura global, además de que parecen estar distribuidos normalmente. Veamos estas dos variables con mas detalle.
+
+
+#### **Dioxido de carbono CO2**
+
+```{r}
+summary(data$CO2)
+```
+
+Ahora veamos la distribución y el plot de densidad:
+
+
+```{r}
+ggplot(data, aes(x = data$CO2)) + 
+  geom_histogram(binwidth=4, color="white", fill="sandybrown", aes(y=..density..)) +
+  geom_density(stat="density", alpha=I(0.1), fill="papayawhip", lty=2) +
+  scale_x_continuous(name="CO2 ppmv", breaks = c(seq(340, 390, 6))) + 
+  theme(axis.line = element_line(colour = "grey", 
+                      size = 1, linetype = "solid")) + 
+  ggtitle("Histogram & Density Curve CO2 (1983-2008)")
+```
+
+
+Aplicamos test de Shapiro-Wilks para determinar normalidad en los datos:
+
+```{r}
+#Normalidad
+shapiro.test(data$CO2) 
+
+
+```
+
+
+H0: las muestras provienen de una distribución normal.\
+H1: las muestras no provienen de una distribución normal.
+
+Según Royston (1995), el valor del p-valor es adecuado para valores menores a 0.1, sin embargo, el test de shapiro es contra la normalidad en los datos, por lo tanto, al ser el p-valor menor al nivel de significancia, entonces se rechaza la hipotesis de que provienen de una distribución normal.\
+
+
+
+Ahora, obtendremos el diagrama de tallo y hojas que nos ayudará a visualizar de manera más numérica la distribución.
+```{r}
+stem(data$CO2)
+```
+
+
+Ahora, observaremos como ha variado el dioxido de carbono a traves de los años según los datos:
+
+```{r}
+ggplot(data, aes(x = data$Year, y = data$CO2)) + 
+  geom_boxplot() + 
+  scale_x_discrete(name="Years", breaks = c(seq(1980, 2008, 3))) + 
+  scale_y_continuous(name="CO2 ppmv") + 
+  theme(axis.line = element_line(colour = "grey", 
+                      size = 1, linetype = "solid")) + 
+  ggtitle("CO2 (1983-2008)") 
+
+```
+
+
+
+
+
+#### **Oxido nitroso N2O**
+
+```{r}
+summary(data$N2O)
+```
+
+Ahora veamos la distribución y el plot de densidad:
+
+
+```{r}
+ggplot(data, aes(x = data$N2O)) + 
+  geom_histogram(binwidth=2, color="white", fill="papayawhip", aes(y=..density..)) +
+  geom_density(stat="density", alpha=I(0.1), fill="sandybrown", lty=2) +
+  scale_x_continuous(name="N2O ppmv", breaks = c(seq(300, 325, 2))) + 
+  theme(axis.line = element_line(colour = "grey", 
+                      size = 1, linetype = "solid")) + 
+  ggtitle("Histogram & Density Curve N2O (1983-2008)")
+```
+
+
+Aplicamos test de Shapiro-Wilks para determinar normalidad en los datos:
+
+```{r}
+#Normalidad
+shapiro.test(data$N2O) 
+
+
+```
+
+
+H0: las muestras provienen de una distribución normal.\
+H1: las muestras no provienen de una distribución normal.
+
+Al ser el p-valor menor al nivel de significancia, entonces se rechaza la hipotesis de que provienen de una distribución normal.\
+
+
+
+Ahora, obtendremos el diagrama de tallo y hojas que nos ayudará a visualizar de manera más numérica la distribución.
+```{r}
+stem(data$N2O)
+```
+
+
+Ahora, observaremos como ha variado el oxido nitroso a traves de los años según los datos:
+
+```{r}
+ggplot(data, aes(x = data$Year, y = data$N2O)) + 
+  geom_boxplot() + 
+  scale_x_discrete(name="Years", breaks = c(seq(1980, 2008, 3))) + 
+  scale_y_continuous(name="N2O ppmv") + 
+  theme(axis.line = element_line(colour = "grey", 
+                      size = 1, linetype = "solid")) + 
+  ggtitle("N2O (1983-2008)") 
+
+```
+
+Se puede observar que la variación mensual de las concentraciones en volumen de N2O varia poco, pero cuando se compara entre años, las diferencias son muy significativas.
+
+Ahora bien, para finalizar realizaremos un modelo de predicción de la variable temperatura a partir del resto de variables.
+
+
+```{r,warning=FALSE,message=FALSE,error=FALSE}
+
+model <- lm(Temp ~ ., data = data.)
+summary(model)
+```
+
+
+Del modelo anterior, obtenemos que las variables contaminantes como CO2, CH4 y N2O son las menos significativas, quizas porque la información que estas aportan al modelo es redundante, debido a su alta correlación.
+
+
+```{r,warning=FALSE,message=FALSE,error=FALSE}
+
+model <- lm(Temp ~ .-N2O-CH4-CO2, data = data.)
+summary(model)
+```
+
+Así, por medio del método backward o de eliminación de variables, se obtuvo un modelo mas significativo, ya que tiene mayor variabilidad.
+
+
+Así, como conclusión, podemos decir que la temperatura no ha dejado de ascender en los ultimos 30 años, y todo se debe a mayores concentraciones de contaminantes en el aire. Además, la mayoria de contaminantes ha tenido un aumento de 30ppmv durante el tiempo de registro de datos, lo cual representa un aumento del casi 10%. El planeta necesita un cambio en las políticas ambientales e industriales practicamente ahora, los resultados ya los podemos evidenciar.
+
+
+
+

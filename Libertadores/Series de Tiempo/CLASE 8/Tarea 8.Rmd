@@ -1,0 +1,220 @@
+---
+title: "Tarea 8"
+author: "Diego Torres"
+date: "17 de mayo de 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Datos de la tesis
+```{r, warning=FALSE,message=FALSE,error=FALSE}
+
+library("vars")
+
+rm(list = ls())
+
+inpath  <- "D:/OneDrive - Universidad de Los Andes/R scripts/Libertadores/Series de Tiempo/Datos/"
+outpath <- "D:/OneDrive - Universidad de Los Andes/R scripts/Libertadores/Series de Tiempo/CLASE 8/taller/"
+
+
+pte_Aranda_F <- read.csv(paste(inpath,"pte_aranda_full.csv", sep = ""))
+pte_Aranda_F <- pte_Aranda_F[2:5]
+
+Temp <- ts(diff(pte_Aranda_F$Temperature, differences = 1), start = c(2009, 1), frequency = 12)
+PM10 <- ts(diff(pte_Aranda_F$PM10, differences = 1), start = c(2009, 1), frequency = 12)
+O3 <- ts(diff(pte_Aranda_F$OZONO, differences = 1), start = c(2009, 1), frequency = 12)
+NO2 <- ts(diff(pte_Aranda_F$NO2, differences = 1), start = c(2009, 1), frequency = 12)
+
+multi <- cbind(Temp, PM10, O3, NO2)
+knitr::kable(head(multi, 7), booktaps = TRUE,
+             caption = "")
+plot.ts(multi, main = 'Transf. Temp, PM10, O3')
+
+
+```
+
+### Modelo VAR
+
+```{r}
+### Especificación del modelo
+VARselect(multi, lag.max = 4, type = "both")
+
+# La funcion especifica hasta tres modelos VAR, los cuales son VAR(1), VAR(2) y VAR(4). Realizaremos la respectiva estimacion y diagnostico de cada uno de ellos
+
+### Estimación VAR(1)
+var1 <- VAR(multi, p = 1, type = "both")
+var1
+
+### Diagnóstico
+serial.test(var1, lags.pt = 16, type = "PT.asymptotic")
+
+# Se rechaza H0, hay evidencia de correlacion de los residuos.
+
+arch.test(var1, lags.multi = 5)
+
+# Se acepta H0, los residuos son homoscedasticos
+
+norm <- normality.test(var1)
+norm
+plot(norm, names = "Temp")
+
+# Se rechaza H0, los residuos no siguen una distribucion normal. Viendo la grafica de temperatura, se observa que la media es aproximadamente 0.25.
+
+### Estimación VAR(2)
+var2 <- VAR(multi, p = 2, type = "both")
+var2
+
+### Diagnóstico
+serial.test(var2, lags.pt = 16, type = "PT.asymptotic")
+
+# Se rechaza H0, hay evidencia de correlacion de los residuos.
+
+arch.test(var2, lags.multi = 5)
+
+# Se acepta H0, los residuos son homoscedasticos
+
+norm <- normality.test(var2)
+norm
+plot(norm, names = "Temp")
+
+# Se rechaza H0, los residuos no siguen una distribucion normal. Viendo la grafica de temperatura, se observa que la media es aproximadamente -0.25.
+
+### Estimación VAR(4)
+var4 <- VAR(multi, p = 4, type = "both")
+var4
+
+### Diagnóstico
+serial.test(var1, lags.pt = 16, type = "PT.asymptotic")
+
+# Se rechaza H0, hay evidencia de correlacion de los residuos.
+
+arch.test(var1, lags.multi = 5)
+
+# Se acepta H0, los residuos son homoscedasticos
+
+norm <- normality.test(var1)
+norm
+plot(norm, names = "Temp")
+
+# Se rechaza H0, los residuos no siguen una distribucion normal. Viendo la grafica de temperatura, se observa que la media es aproximadamente 0.25.
+```
+
+De esta manera, obtenemos una respuesta negativa de parte de las series a ajustarse a un modelo VAR(), por lo que se procedera a intentar ajustar un modelo VEC() a las series.
+
+### Modelo VEC
+
+Analizando la cointegración entre las variables, planteamos un modelo VEC para su ajuste.
+
+
+```{r}
+# Especificación del modelo
+#vec1 <- ca.jo(multi, type = "trace", ecdet = "trend", K = 1, spec = "transitory")
+#summary(vec1)
+
+# Los modelos VAR(1) no son posibles de ajustar en VEC.
+
+vec2 <- ca.jo(multi, type = "trace", ecdet = "trend", K = 2, spec = "transitory")
+summary(vec2)
+
+vec4 <- ca.jo(multi, type = "trace", ecdet = "trend", K = 4, spec = "transitory")
+summary(vec4)
+
+```
+
+
+El test de cointegracipon de Johansen nos indica en ambas especificaciones que existe una relación de cointegración de orden r = 3 con p valores de 10.49
+Ahora se reestima el modelo VEC con restricciones y normalización de relaciones a largo plazo con respecto a la temperatura.
+Una vez especificado el modelo se obtiene la estimación del vector de corrección o cointegración del VAR(2) dado por (1, -0.63, 0.22, 0.04, -0.00067), luego este vector representa el equilibrio en el largo plazo por lo que se puede expresar de la siguiente manera:
+
+$$  y_t = Temp_t  - 0.063PM10 + 0.22O3 + 0.04NO2 - 0.00017t $$
+
+Y el modelo del VEC(4) con el vector propio principal (1, 0.36, -3.69, -0.51, 0.0067) expresado de la siguiente manera:
+
+$$  y_t = Temp_t  + 0.36PM10 -  3.69O3 - 0.51NO2 + 0.0067t $$
+
+Para realizar el diagnostico, usaremos el VEC(2) por simplicidad.
+
+```{r}
+
+var.vec2 <- vec2var(vec2, r = 3)
+
+### Diagnóstico
+serial.test(var.vec2, lags.pt = 16, type = "PT.asymptotic")
+
+# Se rechaza H0, hay evidencia de correlacion de los residuos.
+
+arch.test(var.vec2, lags.multi = 5)
+
+# Se acepta H0, los residuos son homoscedasticos
+
+norm <- normality.test(var.vec2)
+norm
+
+# Se rechaza H0, los residuos no siguen una distribucion normal. 
+
+
+### Funciones de impulso
+causePM_Te <- irf(var.vec2, impulse = 'PM10',
+              response = 'Temp', n.ahead = 10,
+              ortho = FALSE, cumulative = FALSE,
+              boot = FALSE, seed = 12345) 
+plot(causePM_Te)
+
+causeTe_PM <- irf(var.vec2, impulse = 'Temp',
+              response = 'PM10', n.ahead = 10,
+              ortho = FALSE, cumulative = FALSE,
+              boot = FALSE, seed = 12345) 
+plot(causeTe_PM)
+
+
+causeO3_Te <- irf(var.vec2, impulse = 'O3',
+              response = 'Temp', n.ahead = 10,
+              ortho = FALSE, cumulative = FALSE,
+              boot = FALSE, seed = 12345) 
+plot(causeO3_Te)
+
+causeTe_O3 <- irf(var.vec2, impulse = 'Temp',
+              response = 'O3', n.ahead = 10,
+              ortho = FALSE, cumulative = FALSE,
+              boot = FALSE, seed = 12345) 
+plot(causeTe_O3)
+
+
+causeNO2_Te <- irf(var.vec2, impulse = 'NO2',
+              response = 'Temp', n.ahead = 10,
+              ortho = FALSE, cumulative = FALSE,
+              boot = FALSE, seed = 12345) 
+plot(causeNO2_Te)
+
+causeTe_NO2 <- irf(var.vec2, impulse = 'Temp',
+              response = 'NO2', n.ahead = 10,
+              ortho = FALSE, cumulative = FALSE,
+              boot = FALSE, seed = 12345) 
+plot(causeTe_NO2)
+```
+
+Segun las graficas de impulso, el modelo VEC(2) convertido a VAR(p) muestra pulsos fuertes casi que permanentes de parte de los contaminantes a la respuesta de la temperatura, pero no existe reciprosidad. La respuesta de los contaminantes ante los pulsos de temperatura son bajos.
+
+```{r}
+
+fevd.all <- fevd(var.vec2, n.ahead = 8)
+plot(fevd.all, addbars = 1)
+
+# no detecta resultado
+```
+
+Ahora, compararemos los pronosticos tanto del modelo VAR(2) como del VEC(2)
+```{r}
+### Comparación de pronósticos
+predictions.var <- predict(var2, n.ahead = 12, ci = 0.95)
+predictions.vec <- predict(var.vec2, n.ahead = 12, ci = 0.95)
+
+plot(predictions.var, names = 'Temp', main = 'Pronóstico VAR')
+
+plot(predictions.vec, names = 'Temp', main = 'Pronóstico VEC')
+```
+
+Y de esta manera, observamos que los resultados de ambos modelos (VAR(2) y VEC(2)) no son muy lejanos, aunque ninguno de ellos cumple con el diagnostico y los pronosticos son pobres.

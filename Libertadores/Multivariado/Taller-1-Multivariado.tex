@@ -1,0 +1,622 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={Taller 1 Multivariado},
+            pdfauthor={Diego Torres},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\providecommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{Taller 1 Multivariado}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{Diego Torres}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{Febrero de 2020}
+
+
+\begin{document}
+\maketitle
+
+\subsubsection{\texorpdfstring{\textbf{Estudio
+climático}}{Estudio climático}}\label{estudio-climuxe1tico}
+
+Se tiene una base de datos mensual entre mayo de 1983 y diciembre de
+2008 con informacion relacionada a contaminación del aire a nivel
+global, en donde se tienen datos de concentraciones de contaminantes,
+medidas de temperatura, indices, etc.La descripción de las variables es
+la siguiente:
+
+\textbf{Year:} el año de la observacion.\\
+\textbf{Month:} el mes de la observacion.\\
+\textbf{Temp:} la diferencia en grados centigrados entre la temperatura
+promedio global en ese periodo y el valor de referencia. Estos datos
+fueron suministrados por la Unidad de Investigacion Climatica de la
+University of East Anglia.\\
+\textbf{CO2, N2O, CH4, CFC.11, CFC.12:} concentraciones atmosfericas de
+dioxido de carbono (CO2), oxido nitroso (N2O), metano (CH4),
+triclorofluorometano (CCl3F; mas conocido como CFC-11) and
+diclorodifluorometano (CCl2F2; mas conocido como CFC-12),
+respectivamente. CFC.11 y CFC.12 son expresadas en ppbv (partes por
+billon de volumen), mientras que CO2, N2O y CH4 son expresados en ppmv
+(partes por millon de volumen, es decir, 397 ppmv de CO2 significa que
+ese CO2 constituye 397 millonesimas partes del volumen total de la
+atmosfera). Estos datos provienen de ESRL/NOAA Division Global de
+Monitoreo.\\
+\textbf{Aerosols:} la profundidad óptica media del aerosol
+estratosferico a 550 nm. Esta variable es asociada a la actividad
+volcanica y al material piroclastico acomulado en la atmosfera, lo cual
+afecta la cantidad de energía solar que es reflejada de vuelta al
+espacio. Los datos fueron suministrados por el Instituto Godard de
+Estudios Espaciales de la NASA.\\
+\textbf{TSI:} el total de irradiacion solar (TSI) en W/m2 (la tasa a la
+que la energia del sol es depositada por unidad de area). Debido a las
+manchas solares y otros fenomenos similares, la cantidad de energia
+emitida por el sol varia sustancialmente con el tiempo. La información
+fue obtenida de el proyecto web SOLARIS-HEPPA.\\
+\textbf{MEI:} indice multivariado de oscilación meridional de El Niño
+(MEI), una medida que indica la fuerza de oscilación de los fenomenos de
+El Nino/La Nina en el hemisferio sur (Son fenomenos climáticos que
+ocurren en el pacifico sur que afecta temperaturas globales). Los datos
+provienen del ESRL/NOAA División de Ciencias Fisicas.\\
+A continuación, un resumen de los datos.
+
+\begin{verbatim}
+## 'data.frame':    308 obs. of  11 variables:
+##  $ Year    : Factor w/ 26 levels "1983","1984",..: 1 1 1 1 1 1 1 1 2 2 ...
+##  $ Month   : Factor w/ 12 levels "1","2","3","4",..: 5 6 7 8 9 10 11 12 1 2 ...
+##  $ MEI     : num  2.556 2.167 1.741 1.13 0.428 ...
+##  $ CO2     : num  346 346 344 342 340 ...
+##  $ CH4     : num  1639 1634 1633 1631 1648 ...
+##  $ N2O     : num  304 304 304 304 304 ...
+##  $ CFC.11  : num  191 192 193 194 194 ...
+##  $ CFC.12  : num  350 352 354 356 357 ...
+##  $ TSI     : num  1366 1366 1366 1366 1366 ...
+##  $ Aerosols: num  0.0863 0.0794 0.0731 0.0673 0.0619 0.0569 0.0524 0.0486 0.0451 0.0416 ...
+##  $ Temp    : num  0.109 0.118 0.137 0.176 0.149 0.093 0.232 0.078 0.089 0.013 ...
+## NULL
+\end{verbatim}
+
+\begin{verbatim}
+##       Year         Month          MEI               CO2       
+##  1984   : 12   5      : 26   Min.   :-1.6350   Min.   :340.2  
+##  1985   : 12   6      : 26   1st Qu.:-0.3987   1st Qu.:353.0  
+##  1986   : 12   7      : 26   Median : 0.2375   Median :361.7  
+##  1987   : 12   8      : 26   Mean   : 0.2756   Mean   :363.2  
+##  1988   : 12   9      : 26   3rd Qu.: 0.8305   3rd Qu.:373.5  
+##  1989   : 12   10     : 26   Max.   : 3.0010   Max.   :388.5  
+##  (Other):236   (Other):152                                    
+##       CH4            N2O            CFC.11          CFC.12     
+##  Min.   :1630   Min.   :303.7   Min.   :191.3   Min.   :350.1  
+##  1st Qu.:1722   1st Qu.:308.1   1st Qu.:246.3   1st Qu.:472.4  
+##  Median :1764   Median :311.5   Median :258.3   Median :528.4  
+##  Mean   :1750   Mean   :312.4   Mean   :252.0   Mean   :497.5  
+##  3rd Qu.:1787   3rd Qu.:317.0   3rd Qu.:267.0   3rd Qu.:540.5  
+##  Max.   :1814   Max.   :322.2   Max.   :271.5   Max.   :543.8  
+##                                                                
+##       TSI          Aerosols            Temp        
+##  Min.   :1365   Min.   :0.00160   Min.   :-0.2820  
+##  1st Qu.:1366   1st Qu.:0.00280   1st Qu.: 0.1217  
+##  Median :1366   Median :0.00575   Median : 0.2480  
+##  Mean   :1366   Mean   :0.01666   Mean   : 0.2568  
+##  3rd Qu.:1366   3rd Qu.:0.01260   3rd Qu.: 0.4073  
+##  Max.   :1367   Max.   :0.14940   Max.   : 0.7390  
+## 
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(ggplot2)}
+\KeywordTok{ggplot}\NormalTok{(data, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ Year, }\DataTypeTok{y =}\NormalTok{ Temp, }\DataTypeTok{colour =}\NormalTok{ Month)) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_point}\NormalTok{() }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{scale_x_discrete}\NormalTok{(}\DataTypeTok{name=}\StringTok{"Years"}\NormalTok{, }\DataTypeTok{breaks =} \KeywordTok{c}\NormalTok{(}\KeywordTok{seq}\NormalTok{(}\DecValTok{1983}\NormalTok{, }\DecValTok{2008}\NormalTok{, }\DecValTok{3}\NormalTok{))) }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{scale_y_continuous}\NormalTok{(}\DataTypeTok{name=}\StringTok{"Temperature °C"}\NormalTok{, }\DataTypeTok{limits=}\KeywordTok{c}\NormalTok{(}\OperatorTok{-}\FloatTok{0.3}\NormalTok{, }\FloatTok{0.8}\NormalTok{)) }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{theme}\NormalTok{(}\DataTypeTok{axis.line =} \KeywordTok{element_line}\NormalTok{(}\DataTypeTok{colour =} \StringTok{"grey"}\NormalTok{, }
+                      \DataTypeTok{size =} \DecValTok{1}\NormalTok{, }\DataTypeTok{linetype =} \StringTok{"solid"}\NormalTok{)) }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{ggtitle}\NormalTok{(}\StringTok{"Difference in Global temperature between 1983 and 2008"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Taller-1-Multivariado_files/figure-latex/unnamed-chunk-2-1.pdf}
+
+El grafico indica una marcada tendencia de ascenso de los niveles de
+temperatura mundial con respecto a un valor de referencia, los colores
+son dados por el promedio mensual de cada año, mostrando que los
+primeros meses del año suelen ser más calidos.Vamos a ver la insidencia
+de algunos contaminantes y otros fenómenos climaticos en la prediccion
+de estos ascensos de la temperatura.
+
+Ahora, vamos a ver la relacion entre las demas variables
+cualitativas.Para esto, se obtendrá la matriz de covarianza, la cual nos
+permite ver la varianza de cada variable en la diagonal principal.
+Mientras que los demás valores son la covarianza e indican la relación
+de dependencia entre cada par de variables de la matriz. Si ambas
+aumentan o disminuyen, la covarianza es positiva, mientras que si una
+variable tiende a aumentar y la otra no, la covarianza sera negativa. La
+covarianza es similar a la correlación, pero cuando esta ultima se
+calcula, los datos están estandarizados. Por lo tanto, la covarianza se
+expresa en unidades que varían con los datos y no se convierte a una
+escala estandarizada de 1 negativo a +1 como sí ocurre en la
+correlación.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(dplyr)}
+\NormalTok{data. <-}\StringTok{ }\KeywordTok{select}\NormalTok{(data, MEI}\OperatorTok{:}\NormalTok{Temp)}
+\KeywordTok{round}\NormalTok{(}\KeywordTok{cov}\NormalTok{(data.), }\DecValTok{3}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##             MEI     CO2      CH4     N2O  CFC.11   CFC.12    TSI Aerosols
+## MEI       0.880  -1.814   -4.559  -0.796   1.673   -2.161 -0.029    0.010
+## CO2      -1.814 159.950  508.019  64.836 102.678  602.050  0.090   -0.136
+## CH4      -4.559 508.019 2120.757 215.218 664.777 2551.810  2.693   -0.388
+## N2O      -0.796  64.836  215.218  27.302  43.570  253.596  0.083   -0.054
+## CFC.11    1.673 102.678  664.777  43.570 409.325  972.667  2.301   -0.019
+## CFC.12   -2.161 602.050 2551.810 253.596 972.667 3343.950  4.374   -0.410
+## TSI      -0.029   0.090    2.693   0.083   2.301    4.374  0.160    0.001
+## Aerosols  0.010  -0.136   -0.388  -0.054  -0.019   -0.410  0.001    0.001
+## Temp      0.023   1.695    5.771   0.696   1.377    7.135  0.013   -0.002
+##            Temp
+## MEI       0.023
+## CO2       1.695
+## CH4       5.771
+## N2O       0.696
+## CFC.11    1.377
+## CFC.12    7.135
+## TSI       0.013
+## Aerosols -0.002
+## Temp      0.032
+\end{verbatim}
+
+Se observa de la matriz que hay una fuerte relación de dependencia entre
+los contaminantes principales de la atmosfera. Para mirar un poco más la
+relación de dependencia, utilizaremos un grafico de
+correlación.Posteriormente, un grafico que nos indicara la distribucion
+de cada variable, el valor de la correlación y si es significante o no.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(corrplot)}
+\KeywordTok{corrplot}\NormalTok{(}\KeywordTok{cor}\NormalTok{(data.), }\DataTypeTok{type =} \StringTok{"upper"}\NormalTok{, }\DataTypeTok{order =} \StringTok{"hclust"}\NormalTok{, }
+         \DataTypeTok{tl.col =} \StringTok{"black"}\NormalTok{, }\DataTypeTok{tl.srt =} \DecValTok{45}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Taller-1-Multivariado_files/figure-latex/unnamed-chunk-4-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(}\StringTok{"PerformanceAnalytics"}\NormalTok{)}
+\KeywordTok{chart.Correlation}\NormalTok{(data., }\DataTypeTok{histogram=}\OtherTok{TRUE}\NormalTok{, }\DataTypeTok{pch=}\DecValTok{19}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Taller-1-Multivariado_files/figure-latex/unnamed-chunk-5-1.pdf}
+
+Del ultimo grafico podemos observar que hay dos contaminantes, el CO2 y
+el N2O ( correlación de 0.75 y 0.74 con respecto a temp), que son
+altamente correlacionados al delta de temperatura global, además de que
+parecen estar distribuidos normalmente. Veamos estas dos variables con
+mas detalle.
+
+\paragraph{\texorpdfstring{\textbf{Dioxido de carbono
+CO2}}{Dioxido de carbono CO2}}\label{dioxido-de-carbono-co2}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(data}\OperatorTok{$}\NormalTok{CO2)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   340.2   353.0   361.7   363.2   373.5   388.5
+\end{verbatim}
+
+Ahora veamos la distribución y el plot de densidad:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{ggplot}\NormalTok{(data, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ data}\OperatorTok{$}\NormalTok{CO2)) }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{geom_histogram}\NormalTok{(}\DataTypeTok{binwidth=}\DecValTok{4}\NormalTok{, }\DataTypeTok{color=}\StringTok{"white"}\NormalTok{, }\DataTypeTok{fill=}\StringTok{"sandybrown"}\NormalTok{, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{y=}\NormalTok{..density..)) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_density}\NormalTok{(}\DataTypeTok{stat=}\StringTok{"density"}\NormalTok{, }\DataTypeTok{alpha=}\KeywordTok{I}\NormalTok{(}\FloatTok{0.1}\NormalTok{), }\DataTypeTok{fill=}\StringTok{"papayawhip"}\NormalTok{, }\DataTypeTok{lty=}\DecValTok{2}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{scale_x_continuous}\NormalTok{(}\DataTypeTok{name=}\StringTok{"CO2 ppmv"}\NormalTok{, }\DataTypeTok{breaks =} \KeywordTok{c}\NormalTok{(}\KeywordTok{seq}\NormalTok{(}\DecValTok{340}\NormalTok{, }\DecValTok{390}\NormalTok{, }\DecValTok{6}\NormalTok{))) }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{theme}\NormalTok{(}\DataTypeTok{axis.line =} \KeywordTok{element_line}\NormalTok{(}\DataTypeTok{colour =} \StringTok{"grey"}\NormalTok{, }
+                      \DataTypeTok{size =} \DecValTok{1}\NormalTok{, }\DataTypeTok{linetype =} \StringTok{"solid"}\NormalTok{)) }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{ggtitle}\NormalTok{(}\StringTok{"Histogram & Density Curve CO2 (1983-2008)"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Taller-1-Multivariado_files/figure-latex/unnamed-chunk-7-1.pdf}
+
+Aplicamos test de Shapiro-Wilks para determinar normalidad en los datos:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Normalidad}
+\KeywordTok{shapiro.test}\NormalTok{(data}\OperatorTok{$}\NormalTok{CO2) }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  data$CO2
+## W = 0.96349, p-value = 5.401e-07
+\end{verbatim}
+
+H0: las muestras provienen de una distribución normal.\\
+H1: las muestras no provienen de una distribución normal.
+
+Según Royston (1995), el valor del p-valor es adecuado para valores
+menores a 0.1, sin embargo, el test de shapiro es contra la normalidad
+en los datos, por lo tanto, al ser el p-valor menor al nivel de
+significancia, entonces se rechaza la hipotesis de que provienen de una
+distribución normal.\\
+
+Ahora, obtendremos el diagrama de tallo y hojas que nos ayudará a
+visualizar de manera más numérica la distribución.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{stem}\NormalTok{(data}\OperatorTok{$}\NormalTok{CO2)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##   The decimal point is at the |
+## 
+##   340 | 23457
+##   342 | 311122
+##   344 | 12455890355689
+##   346 | 01155778012678
+##   348 | 011244790127899
+##   350 | 02345733445667
+##   352 | 123368999123778889
+##   354 | 01123399991345566779
+##   356 | 1123389991334468
+##   358 | 011245900113344556699
+##   360 | 236788834778
+##   362 | 0224022258
+##   364 | 0123345599224568
+##   366 | 0377990117
+##   368 | 012234600335566779
+##   370 | 35567802556788
+##   372 | 25511224789
+##   374 | 013469056799
+##   376 | 2577005679
+##   378 | 23557792689
+##   380 | 2456891148
+##   382 | 0222445790189
+##   384 | 1125670467
+##   386 | 0144629
+##   388 | 5
+\end{verbatim}
+
+Ahora, observaremos como ha variado el dioxido de carbono a traves de
+los años según los datos:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{ggplot}\NormalTok{(data, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ data}\OperatorTok{$}\NormalTok{Year, }\DataTypeTok{y =}\NormalTok{ data}\OperatorTok{$}\NormalTok{CO2)) }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{geom_boxplot}\NormalTok{() }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{scale_x_discrete}\NormalTok{(}\DataTypeTok{name=}\StringTok{"Years"}\NormalTok{, }\DataTypeTok{breaks =} \KeywordTok{c}\NormalTok{(}\KeywordTok{seq}\NormalTok{(}\DecValTok{1980}\NormalTok{, }\DecValTok{2008}\NormalTok{, }\DecValTok{3}\NormalTok{))) }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{scale_y_continuous}\NormalTok{(}\DataTypeTok{name=}\StringTok{"CO2 ppmv"}\NormalTok{) }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{theme}\NormalTok{(}\DataTypeTok{axis.line =} \KeywordTok{element_line}\NormalTok{(}\DataTypeTok{colour =} \StringTok{"grey"}\NormalTok{, }
+                      \DataTypeTok{size =} \DecValTok{1}\NormalTok{, }\DataTypeTok{linetype =} \StringTok{"solid"}\NormalTok{)) }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{ggtitle}\NormalTok{(}\StringTok{"CO2 (1983-2008)"}\NormalTok{) }
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Taller-1-Multivariado_files/figure-latex/unnamed-chunk-10-1.pdf}
+
+\paragraph{\texorpdfstring{\textbf{Oxido nitroso
+N2O}}{Oxido nitroso N2O}}\label{oxido-nitroso-n2o}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(data}\OperatorTok{$}\NormalTok{N2O)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   303.7   308.1   311.5   312.4   317.0   322.2
+\end{verbatim}
+
+Ahora veamos la distribución y el plot de densidad:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{ggplot}\NormalTok{(data, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ data}\OperatorTok{$}\NormalTok{N2O)) }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{geom_histogram}\NormalTok{(}\DataTypeTok{binwidth=}\DecValTok{2}\NormalTok{, }\DataTypeTok{color=}\StringTok{"white"}\NormalTok{, }\DataTypeTok{fill=}\StringTok{"papayawhip"}\NormalTok{, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{y=}\NormalTok{..density..)) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_density}\NormalTok{(}\DataTypeTok{stat=}\StringTok{"density"}\NormalTok{, }\DataTypeTok{alpha=}\KeywordTok{I}\NormalTok{(}\FloatTok{0.1}\NormalTok{), }\DataTypeTok{fill=}\StringTok{"sandybrown"}\NormalTok{, }\DataTypeTok{lty=}\DecValTok{2}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{scale_x_continuous}\NormalTok{(}\DataTypeTok{name=}\StringTok{"N2O ppmv"}\NormalTok{, }\DataTypeTok{breaks =} \KeywordTok{c}\NormalTok{(}\KeywordTok{seq}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{325}\NormalTok{, }\DecValTok{2}\NormalTok{))) }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{theme}\NormalTok{(}\DataTypeTok{axis.line =} \KeywordTok{element_line}\NormalTok{(}\DataTypeTok{colour =} \StringTok{"grey"}\NormalTok{, }
+                      \DataTypeTok{size =} \DecValTok{1}\NormalTok{, }\DataTypeTok{linetype =} \StringTok{"solid"}\NormalTok{)) }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{ggtitle}\NormalTok{(}\StringTok{"Histogram & Density Curve N2O (1983-2008)"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Taller-1-Multivariado_files/figure-latex/unnamed-chunk-12-1.pdf}
+
+Aplicamos test de Shapiro-Wilks para determinar normalidad en los datos:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Normalidad}
+\KeywordTok{shapiro.test}\NormalTok{(data}\OperatorTok{$}\NormalTok{N2O) }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  data$N2O
+## W = 0.95066, p-value = 1.177e-08
+\end{verbatim}
+
+H0: las muestras provienen de una distribución normal.\\
+H1: las muestras no provienen de una distribución normal.
+
+Al ser el p-valor menor al nivel de significancia, entonces se rechaza
+la hipotesis de que provienen de una distribución normal.\\
+
+Ahora, obtendremos el diagrama de tallo y hojas que nos ayudará a
+visualizar de manera más numérica la distribución.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{stem}\NormalTok{(data}\OperatorTok{$}\NormalTok{N2O)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##   The decimal point is at the |
+## 
+##   303 | 77889
+##   304 | 00112345679
+##   305 | 0000112223333445578899
+##   306 | 1111223444455555666667788999
+##   307 | 3466677788
+##   308 | 024455666777789
+##   309 | 001124444455557779
+##   310 | 0000111111122222222333344455778889999
+##   311 | 1122345556777889
+##   312 | 04455666778
+##   313 | 0022334555679
+##   314 | 234445566679
+##   315 | 01122246899
+##   316 | 00111222233357889999
+##   317 | 0000122234666678
+##   318 | 01111112222356889999999
+##   319 | 135788899999
+##   320 | 01333455556669
+##   321 | 123334444458
+##   322 | 02
+\end{verbatim}
+
+Ahora, observaremos como ha variado el oxido nitroso a traves de los
+años según los datos:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{ggplot}\NormalTok{(data, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ data}\OperatorTok{$}\NormalTok{Year, }\DataTypeTok{y =}\NormalTok{ data}\OperatorTok{$}\NormalTok{N2O)) }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{geom_boxplot}\NormalTok{() }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{scale_x_discrete}\NormalTok{(}\DataTypeTok{name=}\StringTok{"Years"}\NormalTok{, }\DataTypeTok{breaks =} \KeywordTok{c}\NormalTok{(}\KeywordTok{seq}\NormalTok{(}\DecValTok{1980}\NormalTok{, }\DecValTok{2008}\NormalTok{, }\DecValTok{3}\NormalTok{))) }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{scale_y_continuous}\NormalTok{(}\DataTypeTok{name=}\StringTok{"N2O ppmv"}\NormalTok{) }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{theme}\NormalTok{(}\DataTypeTok{axis.line =} \KeywordTok{element_line}\NormalTok{(}\DataTypeTok{colour =} \StringTok{"grey"}\NormalTok{, }
+                      \DataTypeTok{size =} \DecValTok{1}\NormalTok{, }\DataTypeTok{linetype =} \StringTok{"solid"}\NormalTok{)) }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{ggtitle}\NormalTok{(}\StringTok{"N2O (1983-2008)"}\NormalTok{) }
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Taller-1-Multivariado_files/figure-latex/unnamed-chunk-15-1.pdf}
+
+Se puede observar que la variación mensual de las concentraciones en
+volumen de N2O varia poco, pero cuando se compara entre años, las
+diferencias son muy significativas.
+
+Ahora bien, para finalizar realizaremos un modelo de predicción de la
+variable temperatura a partir del resto de variables.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{model <-}\StringTok{ }\KeywordTok{lm}\NormalTok{(Temp }\OperatorTok{~}\StringTok{ }\NormalTok{., }\DataTypeTok{data =}\NormalTok{ data.)}
+\KeywordTok{summary}\NormalTok{(model)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = Temp ~ ., data = data.)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.26228 -0.05868  0.00051  0.05718  0.32170 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) -1.277e+02  1.919e+01  -6.654 1.36e-10 ***
+## MEI          6.632e-02  6.186e-03  10.722  < 2e-16 ***
+## CO2          5.207e-03  2.192e-03   2.375   0.0182 *  
+## CH4          6.371e-05  4.977e-04   0.128   0.8982    
+## N2O         -1.693e-02  7.835e-03  -2.161   0.0315 *  
+## CFC.11      -7.278e-03  1.461e-03  -4.980 1.07e-06 ***
+## CFC.12       4.272e-03  8.763e-04   4.875 1.77e-06 ***
+## TSI          9.586e-02  1.401e-02   6.844 4.38e-11 ***
+## Aerosols    -1.582e+00  2.099e-01  -7.535 5.86e-13 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.09182 on 299 degrees of freedom
+## Multiple R-squared:  0.744,  Adjusted R-squared:  0.7371 
+## F-statistic: 108.6 on 8 and 299 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+Del modelo anterior, obtenemos que las variables contaminantes como CO2,
+CH4 y N2O son las menos significativas, quizas porque la información que
+estas aportan al modelo es redundante, debido a su alta correlación.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{model <-}\StringTok{ }\KeywordTok{lm}\NormalTok{(Temp }\OperatorTok{~}\StringTok{ }\NormalTok{.}\OperatorTok{-}\NormalTok{N2O}\OperatorTok{-}\NormalTok{CH4}\OperatorTok{-}\NormalTok{CO2, }\DataTypeTok{data =}\NormalTok{ data.)}
+\KeywordTok{summary}\NormalTok{(model)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = Temp ~ . - N2O - CH4 - CO2, data = data.)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.26695 -0.06084  0.00119  0.05607  0.32378 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) -1.272e+02  1.913e+01  -6.651 1.36e-10 ***
+## MEI          6.777e-02  6.132e-03  11.052  < 2e-16 ***
+## CFC.11      -6.200e-03  5.104e-04 -12.147  < 2e-16 ***
+## CFC.12       3.656e-03  1.791e-04  20.412  < 2e-16 ***
+## TSI          9.313e-02  1.402e-02   6.644 1.42e-10 ***
+## Aerosols    -1.660e+00  2.086e-01  -7.960 3.50e-14 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.09235 on 302 degrees of freedom
+## Multiple R-squared:  0.7385, Adjusted R-squared:  0.7341 
+## F-statistic: 170.5 on 5 and 302 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+Así, por medio del método backward o de eliminación de variables, se
+obtuvo un modelo mas significativo, ya que tiene mayor variabilidad.
+
+Así, como conclusión, podemos decir que la temperatura no ha dejado de
+ascender en los ultimos 30 años, y todo se debe a mayores
+concentraciones de contaminantes en el aire. Además, la mayoria de
+contaminantes ha tenido un aumento de 30ppmv durante el tiempo de
+registro de datos, lo cual representa un aumento del casi 10\%. El
+planeta necesita un cambio en las políticas ambientales e industriales
+practicamente ahora, los resultados ya los podemos evidenciar.
+
+
+\end{document}

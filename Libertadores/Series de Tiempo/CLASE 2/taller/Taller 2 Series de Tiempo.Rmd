@@ -1,0 +1,318 @@
+---
+title: "Taller 2 Series de Tiempo"
+author: "Diego Torres & John Fonseca"
+date: "marzo de 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+En principio, los paquetes que se usaran en el proyecto:
+```{r,warning=FALSE,message=FALSE,error=FALSE}
+library(TSA)
+library(tseries)
+library(forecast)
+library(ggplot2)
+library(ggfortify) 
+library(zoo)
+
+```
+
+A continuación, los ejercicios propuestos:
+
+
+##### **1- Diferencia entre ST y ML**\
+
+El primero error que se puede evidenciar en el articulo es que el caso epidemiologico de la pandemia actual provocada por el covid-19 lo han tratado como una regresion lineal simple, especifican ciertos parametros y afirman que, debido a que el modelo obtenido tiene alto coeficiente de Pearson, ya es un modelo lineal perfecto. El problema radica en que este caso debe asumirse como una serie temporal, la cual depende de muchos otros factores y no de solamente numero de casos vs tiempo como se lleva en el modelo presentado. No hay una dimensionalidad real del fenomeno y es un estudio que tampoco tiene sustento bioestadistico, los datos usados no son suficientes y también se realizan afirmaciones fuertes a partir de muy poca informacion y analisis aun mas pobres. Ademas, no se tiene en cuenta la autocorrelacion, el analisis hecho no muestra dependencia entre observaciones. En conclusion, es un analisis muy pobre.
+
+\
+
+
+
+
+##### **2- Busque dos librerías en R que le permita simular series de tiempo, especifique los parámetros más relevantes y compare según su opinión cual es mejor. Ayudese de rseek.org** \ 
+
+Para este apartado podemos referirnos a los paquetes `xts` y `zoo`.
+
+
+
+El primero es muy util para series de tiempo de frecuencia alta, como una serie temporal diaria. Muy util tambien para manejar series extensas, y genera objetos tipo **xts**, los cuales manejan fechas y datos asociados como un solo objeto. Son creados de la siguiente manera:\
+\
+
+**df_xts <- xts(vector, as.Date)**\
+
+\
+Una de las ventajas de este paquete es que, en alianza con el paquete lubridate, tiene funciones para tranformar la frecuencia de los datos de una manera muy sencilla.
+
+Por ejemplo:
+
+to.monthly(df_xts) \
+to.weekly(df_xts) \
+to.yearly(df_xts) \
+
+\
+ 
+Ademas de permitir filtrados temporales rapidos, asi:
+
+df_xts["2009"]\ 
+
+Ahora bien, por el lado del paquete `zoo` tenemos, igualmente, la creacion de una serie de clase zoom mediante:
+
+
+
+x.Date <- as.Date(paste(2004, rep(1:4, 4:1), sample(1:28, 10), sep = "-"))\
+
+**df_zoo <- zoo(rnorm(12), x.Date)**\
+
+
+
+la cual una de sus ventajas es que suaviza los datos de entrada de acuerdo con funciones moviles como la media, la mediana, el maximo, etc de la siguiente manera.
+
+
+dt_smooth_mean <- rollmean(df_ts, freq, fill) \
+dt_smooth_mean <- rollmax(df_ts, freq, fill) \
+dt_smooth_mean <- rollmedian(df_ts, freq, fill) \
+
+\
+ 
+Se observan atributos como df_ts, el cual es un objeto de tipo zoo; tambien tenemos freq, el cual tiene una funcion similar que en la funcion `ts` y especifica el numero de observaciones por intervalo de tiempo. Y además, tenemos el atributo fill, el cual es util cuando una serie de tiempo no empieza desde año/01/01 indicando que hay nulidad en esos datos.
+
+\
+
+
+
+
+##### **3- Describa características importantes de la función de autocorrelación (ACF) para los siguientes modelos: MA(1), MA(2), AR(1), AR(2), ARMA(1,1)**\
+
+
+**AR(1)**\
+Siempre que |$\phi$| < 1 la dependencia entre observaciones decrece a medida que el rezago (o lag) aumenta, llegando a ser asintota del cero.Lo anterior, mediante:
+
+
+$$  \gamma_1 = \frac{ \phi  \theta^2}{1 - \phi^2} $$
+Si el parametro es positivo, la dependencia lineal del nuevo valor y el valor inmediatamente pasado es siempre positiva, mientras que si el parametro es negativo, la dependendia es positiva para rezagos pares y negativa para los impares.
+
+En AR(1) el efecto de $Z_{t-2}$ en $Z_{t}$ es siempre a traves de $Z_{t-1}$, y dado $Z_{t-1}$, el valor de $Z_{t-2}$ es irrelevante para predecir $Z_{t}$.
+
+
+**AR(2)**\
+
+En un modelo AR(2) ademas de el efecto de $Z_{t-2}$ que transmite a $Z_{t}$ a traves de $Z_{t-1}$, tambien existe un efecto directo de $Z_{t-2}$ en $Z_{t}$.
+
+En general, un modelo AR(p) tiene efectos directos en observaciones separadas por 1, 2, ..., p rezagos, y el efecto directo de las observaciones separadas por mas de p rezagos es nulo. Por lo que determinar el orden de un proceso autorregresivo a partir de su autocorrelacion es complejo. Por lo que se opta en utilizar los procesos de autocorrelacion parcial (PACF), en donde el numero de coefficientes diferentes de cero indican el orden del proceso AR().
+
+Los procesos autorregresivos tienen en general infinitos coeficientes de autocorrelacion que van decayendo a medida que aumentan los rezagos. Los procesos AR tienen cierta "memoria a largo plazo" ya que el valor actual dentro de la serie esta correlacionado con todos los anteriores, aunque estos van disminuyendo con el tiempo.
+
+
+**MA(1)**\
+
+Al contrario que los procesos autorregresivos AR, Los procesos de media movil si tienen cierta "memoria a corto plazo", lo que indica que el valor actual estara correlacionado con un pequeño grupo de observaciones inmediatamente anteriores a el.
+
+La funcion de autocorrelacion para un proceso MA(1)  solo tendra un valor diferente a cero en el primer rezago. La funcion de autocorrelacion (ACF) de un proceso MA(1) tiene las mismas propiedades que la funcion de autocorrelacion parcial de un AR(1): hay un primer coeficiente diferente de cero, de resto son nulos. El PACF de un MA(1) tiene la misma estrutura que el ACF de un AR(1).
+
+
+**MA(2)**\
+
+Un proceso MA(q) es siempre estacionario y existe una dualidad entre los procesos AR y MA, la cual es que la PACF de un MA(q) tiene la misma estructura que el ACF de un AR(q) y viceversa, que el PACF de un AR(q) posee la misma estructura que un ACF de MA(q).
+
+
+**ARMA(1,1)**\
+
+En el caso en el que ambos coeficientes son positivos y $\phi_1 > \theta_1$, es facil probar que la correlacion aumenta con $\phi_1$ - $\theta_1$. El resto de los terminos se basan en: 
+
+$$  \rho_k = \phi_1\rho_{k-1} $$    con $k$ > 1
+
+Lo cual indica que a partir del primer coeficiente, el ACF de un ARMA(1,1) decae exponencialmente. este decaimiento esta determinado por el parametro $\phi_1$ del componente AR.
+
+La diferencia con los modelos AR(1) es que el decaimiento empieza en $\rho_1$ y no en $\rho_0 = 1$, y que este primer valor de la autocorrelacion de primer orden depende de la diferencia relativa entre $\phi_1$ y $\theta_1$.
+
+En conclusion, en un proceso ARMA(1,1), ACF y PACF tienen una estructura similar: un valor inicial diferente de cero y cuya magnitud depende de $\phi_1$ - $\theta_1$, seguido de un decaimiento geometrico. La tasa en la que decae el ACF depende de $\phi_1$, mientras que en PACF depende de $\theta_1$.
+
+\
+
+
+
+
+##### **4- Con una de las librerías anteriores simular un modelos MA(2) para obtener las funciones de autocorrelacion con los siguientes parámetros; ¿Qué puede interpretar de las 3 diferentes funciones de autocorrelación? **\
+\
+
+
+**4.1- (0.5, 0.4)**\
+
+```{r, echo =FALSE}
+set.seed(999)
+
+theta.1.sim <- 0.5
+theta.2.sim <- 0.4
+rho.1.sim   <- (-theta.1.sim + theta.1.sim * theta.2.sim) / 
+  (1 + theta.1.sim^2 + theta.2.sim^2)
+rho.2.sim   <- (-theta.2.sim) / (1 + theta.1.sim^2 + theta.2.sim^2)
+
+ruido.blanco <- rnorm(102, 0, 1)
+y.t <- zlag(zlag(ruido.blanco)) - (theta.1.sim * zlag(ruido.blanco)) -
+  (theta.2.sim * ruido.blanco)
+y.t <- y.t[-c(1,2)]
+
+st <- zoo(y.t)
+acf(st, main = "correlograma ambos positivos")
+```
+
+
+**4.2- (1.2,-0.7)**\
+
+```{r, echo=FALSE}
+set.seed(999)
+
+theta.1.sim <- 1.2
+theta.2.sim <- -0.7
+rho.1.sim   <- (-theta.1.sim + theta.1.sim * theta.2.sim) / 
+  (1 + theta.1.sim^2 + theta.2.sim^2)
+rho.2.sim   <- (-theta.2.sim) / (1 + theta.1.sim^2 + theta.2.sim^2)
+
+ruido.blanco <- rnorm(102, 0, 1)
+y.t <- zlag(zlag(ruido.blanco)) - (theta.1.sim * zlag(ruido.blanco)) -
+  (theta.2.sim * ruido.blanco)
+y.t <- y.t[-c(1,2)]
+
+st <- zoo(y.t)
+acf(st, main = "correlograma theta1 +, theta2 -")
+```
+
+**4.2- (-1,-0.6)**\
+
+```{r, echo=FALSE}
+set.seed(999)
+
+theta.1.sim <- -1
+theta.2.sim <- -0.6
+rho.1.sim   <- (-theta.1.sim + theta.1.sim * theta.2.sim) / 
+  (1 + theta.1.sim^2 + theta.2.sim^2)
+rho.2.sim   <- (-theta.2.sim) / (1 + theta.1.sim^2 + theta.2.sim^2)
+
+ruido.blanco <- rnorm(102, 0, 1)
+y.t <- zlag(zlag(ruido.blanco)) - (theta.1.sim * zlag(ruido.blanco)) -
+  (theta.2.sim * ruido.blanco)
+y.t <- y.t[-c(1,2)]
+
+st <- zoo(y.t)
+acf(st, main = "correlograma ambos negativos")
+```
+
+\
+
+
+
+
+##### **5- En la serie de la tarea anterior, ¿cual modelo cree que podría ajustar y por qué?**
+\
+
+```{r, echo=F}
+inpath  <- "D:/OneDrive - Universidad de Los Andes/R scripts/Libertadores/Series de Tiempo/Datos/"
+ton <- read.csv(paste(inpath,"Exportaciones.csv", sep = "")
+                 , sep = ";")
+ton.ts <- ts(ton$ton.metricas, start = c(1992,1), frequency = 12)
+acf(ton.ts, main = "Distribución Normal",col="red", lag.max = 300)
+```
+
+El problema con la serie de la clase pasada es que era una serie no estacionaria, por lo que supongo que seria incorrecto relacionarla a algun modelo ARIMA. La correlacion entre las observaciones es muy alta y yo diria que podria asociarse a un modelo MA(p) debido a que parece que toma sus datos historicos mas recientes para llevar a cabo la serie, aunque no podria afirmarlo.
+\
+
+
+
+
+##### **6- Realice las gráficas de la función de autocorrelación para ARMA(1,1) con los siguientes parámetros: **\
+\
+Siguiendo la expresion a continuacion:
+
+$$  Y_t = \phi Y_{t-1} - \theta e_{t-1} + e_t  $$
+
+Se realizara la simulacion ARMA(1,1). Primero definiremos los parametros de ruido blanco en comun para todas las graficas:
+
+```{r, echo=FALSE}
+set.seed(999)
+ruido.blanco <- rnorm(101,0,1)
+et <- zlag(ruido.blanco)
+ruido.blanco <- ruido.blanco[-1]
+print(paste(expression(e[t-1])))
+print(head(ruido.blanco))
+et <- et[-1]
+print(paste(expression(e[t])))
+print(head(et))
+
+```
+
+**6.1- Ambos positivos**\
+
+```{r}
+y    <- NULL
+y[1] <- rnorm(1,0,1)
+phi  <- 0.8
+theta <- 0.9
+
+for(t in 2:101){
+  y[t] <- (phi * y[t-1]) - (theta * ruido.blanco[t-1]) + et[t-1]
+}
+
+st <- ts(y)
+acf(st, main = "correlograma positivos")
+
+```
+
+AHora, con la misma formulacion pero jugando un poco con los signos de los coeficientes $\phi$ y $\theta$ tenemos:
+
+
+#####**6.2- Ambos negativos**\
+
+```{r, echo=FALSE}
+y    <- NULL
+y[1] <- rnorm(1,0,1)
+phi  <- -0.8
+theta <- -0.9
+
+for(t in 2:101){
+  y[t] <- (phi * y[t-1]) - (theta * ruido.blanco[t-1]) + et[t-1]
+}
+
+st <- ts(y)
+acf(st, main = "correlograma negativos")
+
+```
+
+
+#####**6.3- Cruzados**\
+
+**$\phi$ positivo, $\theta$ negativo**
+
+```{r, echo =FALSE}
+y    <- NULL
+y[1] <- rnorm(1,0,1)
+phi  <- 0.8
+theta <- -0.9
+
+for(t in 2:101){
+  y[t] <- (phi * y[t-1]) - (theta * ruido.blanco[t-1]) + et[t-1]
+}
+
+st <- ts(y)
+acf(st, main = "correlograma phi + y theta -")
+
+```
+
+**$\phi$ negativo, $\theta$ positivo**
+
+```{r, echo =FALSE}
+y    <- NULL
+y[1] <- rnorm(1,0,1)
+phi  <- -0.8
+theta <- 0.9
+
+for(t in 2:101){
+  y[t] <- (phi * y[t-1]) - (theta * ruido.blanco[t-1]) + et[t-1]
+}
+
+st <- ts(y)
+acf(st, main = "correlograma phi - y theta +")
+
+```

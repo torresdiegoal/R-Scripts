@@ -1,0 +1,212 @@
+---
+title: "Proyecto Multivariado"
+author: "Diego Alexander Torres"
+date: "Marzo de 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### **Estadisticas Pokemon**
+
+Se tiene una base de datos con un listado completo de los pokemones existentes y sus estadisticas en los videojuegos de la franquicia creados hasta la fecha. Actualmente, Pokemon se compone de siete generaciones. Estas se han sucedido desde 1996, a lo largo de 20 anos, por lo que las generaciones suelen durar entre tres y cuatro anos. No reciben un nombre especifico, sino que se numeran cronologicamente: primera, segunda, tercera, cuarta, quinta, sexta y septima generacion. La descripcion de las variables dentro de la base de datos es la siguiente:
+
+**Name:** Nombre del Pokemon.\
+**Type.1:** Tipo principal del pokemon. Ej: Fuego, Agua, Planta.\
+**Type.2:** Tipo secundario del pokemon.\
+**Total:** Suma total de las estadisticas.\
+**HP:**  Health points o puntos de salud, la vida del pokemon.\
+**Attack:** Es una de las estadisticas de ataque. Los ataques fisicos se miden con el ataque del Pokemon y la defensa del rival. Hasta la tercera generacion, los ataques fisicos eran los de los tipos fantasma, lucha, normal, tierra, roca, bicho, veneno, acero y volador, pero a partir de la cuarta generaciin ya no depende del tipo sino de cada movimiento en particular\
+**Defense:** Representa la resistencia natural de un Pokemon ante los movimientos fisicos.\
+**Sp..Atk:** El ataque especial de un pokemon. Representa la fuerza con la que un Pokemon realiza un movimiento especial. Se considera movimiento especial, aquellos movimientos en los que se realiza un ataque a distancia, o un ataque en el que se libera energia del Pokemon. Hasta la tercera generacion los ataques especiales eran los de los tipos agua, hielo, fuego, planta, electrico, dragon, psiquico y siniestro\
+**Sp..Def:** La defensa especial, representa la resistencia a los movimientos especiales.\
+**Speed:** La velocidad es la propiedad del Pokemon de atacar, antes o despues, que el oponente.\
+**Generation:** generacion a la cual pertenece el pokemon.\
+
+A continuacion, un resumen de los datos.
+```{r, echo=FALSE}
+rm(list = ls())
+library(dplyr)
+Pokedex <- read.csv("D:/OneDrive - Universidad de Los Andes/R scripts/Libertadores/Multivariado/Clase 2/Pokemon.csv", 
+                    sep =",")
+
+Pokedex <- select(Pokedex, 2:12)
+Pokedex$Type.2 <- sub("^$", "No posee", Pokedex$Type.2)
+print(str(Pokedex))
+print(summary(Pokedex))
+```
+
+#### **PCA**\
+
+##### **Estudio de variables**\
+
+Realice un analisis de componentes principales, ¿Que podemos decir de las estadisticas de los pokemon?, ¿Que podemos afirmar de estas?.
+
+
+Al ser ser un analisis de componentes principales, se requiere que la base de datos utilizada dentro de las funciones de PCA sea completamente numerica, de lo contrario, se obtendran errores que impediran el analisis. La informacion completa del analisis sera obtenido por el output de la funcion PCA() de la libreria FactoMineR.
+
+```{r,warning=FALSE,message=FALSE,error=FALSE}
+library("FactoMineR")
+library("factoextra")
+library('textshape') # funcion column_to_rownames
+
+pokedex. <- select(Pokedex, c(1,5:10))
+# Ubicar los nombres de pokemon como nombre de la fila
+Pokedex. <- column_to_rownames(pokedex., loc = 1)
+Pokedex. <- head(Pokedex., 25)
+
+poke.pca <- PCA(Pokedex., graph = FALSE)
+
+plot.PCA(poke.pca)
+
+```
+
+El resultado es una lista con multiple informacion del analisis, incluyendo la transformacion lineal de la informacion dada por parametro. Procederemos a conocer mas sobre los nuevos ejes generados en el analisis de PCA, por ejemplo, los valores propios de cada eje y el porcentaje de variabilidad total que cada eje tiene asociado.
+
+```{r,warning=FALSE,message=FALSE,error=FALSE}
+## descripcion de los nuevos ejes 
+print(poke.pca$eig)
+```
+
+El resultado nos muestra en la primera columna los valores propios, en la segunda el porcentaje de varianza representada en cada nuevo componente, y la tercera el porcentyaje de varianza acomulada. Para ver esta informacion un poco mas grafica, se utiliza la siguiente funcion:
+
+```{r}
+fviz_eig(poke.pca, addlabels = TRUE, ylim=c(0,80))
+```
+
+El grafico anterior nos muestra que el 63,42% de varianza total dada por las variables originales se encuentra en los dos primeros ejes. Ahora, veremos como esta informacion de las variables ha sido repartida en los diferentes nuevos ejes principales, las veremos mas en detalle a continuacion.
+
+```{r}
+var. <- poke.pca$var
+```
+
+Una de las variables resultantes mas importantes del analisis es la contribucion  o el aporte de las variables originales en la creacion de los nuevos ejes. Un grafico de correlacion ilustrara muy bien esta informacion 
+
+```{r,warning=FALSE,message=FALSE,error=FALSE}
+
+#CONTRIBUCION DE LAS VARIABLES EN LOS NUEVOS EJES
+
+library("corrplot")
+var.$contrib
+corrplot(var.$contrib, is.corr = FALSE)
+```
+
+
+Lo mas importante que nos dice este tipo de graficas es que cada variable parece mostrar una fuerte relacion con cierto eje en especifico. Por ejemplo, en el primer eje, todas las variables parecen contribuir de manera equitativa, y en baja medida, con informacion. Mientras que en el eje dos, **Speed** y **Defense**, que fueron las que aportaron ligeramente menor en el primer eje, aportan aqui una variabilidad considerable de informacion. Puede verse igualmente de manera grafica\
+
+
+
+Ahora, el siguiente grafico nos mostrara la contribucion total de las variables en los dos principales ejes
+
+
+```{r}
+## grafico de barras que muestra la contribucion de la variables en dim1 y dim2
+fviz_contrib(poke.pca, choice="var", axes=1:2, top=10)
+```
+
+La grafica nos indica que son tres las variables que aportan mayor informacion en la generacion de los ejes 1 y 2: **Speed**, **Defense** y **Sp..Atk**. Tiene sentido que Defense y Speed sean las variables de mayor aporte, ya que son variables que parecen contener mayor variabilidad, debido a que los Pokemon mas defensivos tenderian a ser los mas lentos: Pero eso lo veremos con mas detalle mas adelante.
+
+
+Ahora, observaremos otra de las variables del analisis de PCA: la calidad de representacion, es decir, la correlacion de las variables con los nuevos ejes principales. De igual manera, se presentara esta informacion de manera grafica.
+
+```{r}
+#CORRELACION ENTRE LAS VARIABLES Y LOS NUEVOS EJES
+# (CALIDAD DE LA REPRESENTACION)
+var.$cos2
+corrplot(var.$cos2, is.corr = FALSE)
+```
+
+El grafico muestra similitudes importantes con el de contribucion. Las variables, en este caso, que aportaron mayor informacion en el primer eje, vienen siendo mas correlacionados a este mismo eje, igual para el segundo, solo que para el caso del segundo eje, la correlacion es muy alta para las variables Defense y Speed.\
+
+Igualmente, veremos las variables que estan mas correlacionadas con los principales nuevos ejes mediante el siguiente codigo:
+
+```{r}
+fviz_cos2(poke.pca, choice="var", axes=1:2, TOP=10)
+```
+
+Este grafico es muy interesante ya que muestra que al menos 2 de las 6 variables originales (Defense y Speed) estan altamente correlacionadas (>70%) con los dos ejes principales. Lo anterior también muestra una tendencia de que los nuevos ejes tienden a captar informacion significativa de esas dos variables.
+
+Ahora, veremos el grafico de correlacion circular 
+
+```{r}
+# Grafica de correlacion circular
+fviz_pca_var(poke.pca, col.var="cos2")
+
+# o plot.PCA(se.pca, choix="var")
+```
+
+Del grafico anterior podemos observar un poco la relacion entre las variables originales, la relacion de las variables y los nuevos ejes, y la contribucion de cada variable.Entre las cosas que se pueden observar son independencias en la correlacion, tales como la que existe entre la velocidad y la defensa; pokemones altamente defensivos no quiere decir que no sean veloces, o al reves. Tambien, se observa que variables como los puntos de vida presentan valores altos en pokemones con mayor ataque, lo cual tiene sentido ya que son pokemones que requieren tener resistencia a la hora de ejercer taques fisicos. Aunque tambien se observa que Ataque y Puntos de Vida contribuyen poco en la generacion de los nuevos ejes. Ademas, la mayoria de variables estan mas relacionadas con el eje 1 y variables como la defensa y la velocidad con el eje 2.\\
+
+\
+
+
+##### **Estudio de individuos**\
+
+
+Finalmente, aqui termina el analisis por variables, ahora iniciaremos el analisis por individuos u observaciones, en este caso, el aporte de cada Pokemon. De igual manera, los individuos tienen contribucion y correlacion con los nuevos ejes, asi que sera un procedimiento similar.
+
+
+
+```{r}
+#distancia de los individuos al centro de la nube
+head(sort(poke.pca$ind$dist, decreasing = T))
+```
+
+Este punto del analisis de indiviuos es importante ya que es aqui donde se puede observar la influencia de alguna estadistica (datos del Pokemon) exagerada del Pokemon. Y dependiendo de la interpretacion que se le de al analisis, este tipo de observaciones serian descartadas por ser posibles outliers. En este caso no, en este caso indica la presencia de Pokemon fuera de lo comun o que se destacan por algun atributo anormal. En este caso, pudimos observar el top 6 de la contribucion de los individuos en cada uno de los ejes de la siguiente manera: 
+
+```{r}
+#contribucion de los individuos en la construcion de los primeros dos ejes
+
+print("Eje 1")
+head(sort(poke.pca$ind$contrib[,1], decreasing = T))
+
+print("Eje 2")
+head(sort(poke.pca$ind$contrib[,2], decreasing = T))
+```
+
+De una manera mas grafica, podemos observar la generalidad de los datos ya sea por su dispersion de acuerdo con los nuevos ejes coordenados, o mediante un histograma. Realizaremos primero el grafico de dispersion:
+
+
+```{r}
+#Contribucion
+fviz_pca_ind(poke.pca, col.ind = "contrib")
+```
+
+El grafico nos muestra que, en terminos de contribucion, la mayoria de individuos aporta significativamente poco. Se observa que los puntos que mas aportan son los pokemon "raros" y se encuentran alejados del centro de masa (corrobonrado la correspondencia de los puntos con los correspondientes nombres en la base de datos). Tambien hay mayor variabilidad y mayor dispersion a lo largo del eje 1, ya que es el que recoje mas informacion, mientras la dispersion al rededor del eje 2 es menor, debido  que se relaciona mas con unicamente dos variables. Ahora bien, el histograma:
+
+
+```{r}
+fviz_contrib(poke.pca, choice = "ind", axes=1:2)
+```
+
+
+A partir de este histograma fuertemente sesgado a la derecha podemos observar una contribucion muy fuerte pero de muy pocos Pokemon, los cuales coinciden con los Pokemon legendarios o Pokemon con alguna estadistica fuertemente anormal. Los Pokemon con estadisticas altas pero balanceadas se encuentran en una contribucion del 0.25 al 0.5. Pokemones con estadisticas bajas y balanceadas tienden a aportar muy poco y de igual medida. Esto ocurre en ambos ejes.
+
+
+
+De igual manera, realizaremos el mismo proceso anterior pero con el tema de la correlacion de los individuos con los nuevos ejes.
+
+```{r}
+# Calidad de representacion (correlacion)
+fviz_pca_ind(poke.pca, col.ind = "cos2")
+```
+
+esta grafica, aunque muy similar a la de contribuciones, tiene un detalle muy importante, y es que la correlacion de la mayoria de los pokemon con los nuevos ejes es alta, sobre todo en los valores mas extremos del eje principal.
+
+
+```{r}
+fviz_cos2(poke.pca, choice = "ind", axes=1:2)
+```
+
+Con respecto al histograma, parece seguir una distribucion lineal negativa. Al menos 1/3 de los individuos parece estar >= 50% de correlacion con los nuevos ejes. Sin embargo, en este grafico en especifico es complicado determinar que caracteristicas son las que toman los individuos para estar mas correlacionado o no a cierto eje. y como conclusion podemos decir que 
+
+
+
+
+Como conclusiones finales podemos decir que el analisis de PCA agrupa un buen porcentaje de informacion del total que contenia la base de datos. Por el lado del analisis de variables, las variables mostraron un interesante comportamiento en cuanto a su contribucion. En uno de los ejes todas las variables parecian estar aportando, pero en la segunda, casi todo lo aportaban la Velocidad y la Defensa, lo que podria indicar que podrian ser variables secundarias que afectan significativamente el desempeño por estadisticas de un pokemon en especifico. Por el lado del analisis de individuos, se observo la fuerte influencia de puntos que en otro tipo de estudios podrian ser considerados como outliers e inmediatamente descartados. Podemos decir que buena parte de los individuos dentro del estudio muestran alta correlacion con los nuevos ejes, sin embargo, contribuyen poco en la construccion de estos.
+
+De ambos analisis, podria concluirse que el de individuos mostro caracteristicas mas interesantes, ya que permitio ver la influencia individual de cada una de estas "especies" de fantasia. El analisis de variables como tal nos mostro la relacion de dependencia/independencia entre las estadisticas de cada pokemon y nos indico que los rangos de estadisticas mas altos son los de la variable defensa y la variable velocidad. Pero aun asi, el analisis de individuos nos presento la importancia de ciertos pokemon sobre otros, visualizamos en un grafico de dispersion que los pokemon mas veloces tienen valores positivos dentro del eje 2, y los valores altos en defensa eran negativos en este mismo eje. El caso es que detras de todo pokemon existen datos, datos que nos hablan de que tan poderoso puede ser, y hasta este tipo de videojuegos y entretenimiento tienen "su ciencia". 
+
+

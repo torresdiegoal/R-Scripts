@@ -1,0 +1,542 @@
+---
+title: __Serie Temporal de la Temperatura de Bogota segun datos de la estacion Puente
+  Aranda__
+author: "__Diego Alexander Torres__"
+date: "__Mayo de 2020__"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<style>
+body {
+text-align: justify}
+</style>
+
+## Estudio climatico
+
+### 1. __Introduccion__
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+En el mundo es muy conocido que la temperatura es una de las magnitudes que mas se utilizan con el fin de poder describir y explicar el estado de la atmosfera y explicar el estado meteorologico. La temperatura va cambiando a lo largo del dia, varía en dias nublados, o con viento, en la noche, de una estacion a otra, en distintos lugares, etc. Nunca vamos a tener una temperatura igual y estable durante muchas horas, por lo que es necesario medirla desde diferentes puntos y de manera constante para así poder obtener conclusiones con fines ambientales. La temperatura es, sin duda alguna, la variable mas estudiada cuando se habla de calientamiento global, sin embargo, las conclusiones sobre este fenomeno climatico no se obtienen solamente de medir la temperatura, sino tambien las causas que generan estas variaciones. Entre los diversos factores que afectan el comportamiento de la temperatura encontramos los contaminantes atmosfericos: los denominados aerosoles (PM) o demas gases y particulas son muestras de algunos de ellos.
+
+Bogota sera la ciudad escogida para llevar a cabo un estudio estadistico del comportamiento de la temperatura a partir de su relacion con diferentes contaminantes atmosfericos.
+El objetivo principal de este proyecto es el de poder pronosticar la temperatura promedio mensual de la ciudad de Bogota por los proximos años a partir de los datos de la estacion Puente Aranda, y de su relacion con algunos contaminantes. Para lograr lo anterior, uno de los recursos utilizados es el ajuste de modelos de series temporales, los cuales pueden ser tanto univariados como multivariados, por lo que optaremos por realizar ambos: uno de la temperatura solamente, y otro con los demas contaminantes. Finalmente, se compararan los resultados obtenidos de los modelos.
+
+\
+
+
+### 2. __Analisis descriptivo__
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Para dar inicio, se obtuvo una base de datos mensual entre enero de 2009 y diciembre de 2019 con informacion relacionada a la temperatura promedio mensual y algunos contaminantes atmosfericos, la cual fue captada a partir de datos horarios medidos por la estacion meteorologica Puente Aranda, en Bogota. La descripción de las variables es la siguiente:\
+
+
+**DateTime:** serie mensual de 11 años entre 2009-2019.\
+**Temperature:** temperatura promedio mensual en grados centigrados.\
+**PM10:** particulas solidas o liquidas de grosor 2,5-1 $\mu$m y es medida en $\frac{\mu g}{m^3}$.\
+**OZONO:** ozono medido en ppb.\
+**NO2:** dioxido de nitrogeno medido en ppb.\
+
+
+
+Antes de dar inicio, se presentaran las librerias utilizadas:
+
+```{r,warning=FALSE,message=FALSE,error=FALSE}
+
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(ggpubr)
+library(corrplot)
+library(tseries)
+library(ggfortify)
+library(TSA)
+#library(MTS)
+library(mvtnorm)
+library(forecast)
+
+```
+
+Ahora bien, realizaremos un analisis descriptivo de la informacion a utilizar. Iniciaremos con el encabezado de los datos
+
+```{r, echo=FALSE, results='asis'}
+
+rm(list = ls())
+
+inpath  <- "D:/OneDrive - Universidad de Los Andes/R scripts/Libertadores/Series de Tiempo/Datos/"
+outpath <- "D:/OneDrive - Universidad de Los Andes/R scripts/Libertadores/Series de Tiempo/CLASE 3/taller/"
+
+
+pte_Aranda <- read.csv(paste(inpath,"PteAranda_mensual.csv", sep = ""))
+
+pte_Aranda$DateTime <- ymd(pte_Aranda$DateTime)
+
+knitr::kable(head(pte_Aranda[,1:5], 7), booktaps = TRUE,
+             caption = "")
+
+
+```
+
+Ahora, presentaremos una tabla con informacion descriptiva mas detallada de la distribucion mensual de los datos de cada una de las variables utilizadas en este proyecto. 
+
+
+
+```{r fig.align="center", echo=FALSE, fig.cap="", out.width = '90%'}
+knitr::include_graphics(paste(inpath,"Pte_aranda.png", sep = ""), auto_pdf = getOption("knitr.graphics.auto_pdf", TRUE))
+```
+
+Y finalmente un boxplot que resume el comportamiento mensual de cada variable.
+
+```{r fig.align="center", echo = FALSE, warning=FALSE,message=FALSE,error=FALSE}
+
+pte_Aranda$Month <- as.factor(month(pte_Aranda$DateTime))
+
+Te <- ggplot(pte_Aranda, aes(x = Month, y = Temperature)) + 
+  stat_boxplot(geom = "errorbar") +
+  geom_boxplot(fill = "gray96", size = .6, outlier.size = 1., outlier.color = "gray40") + 
+  xlab(NULL) +
+  ylab(parse(text = "Temperature ~~ group('(', degree * C, ')')")) + 
+  theme(axis.text.x = element_text(angle = 90)) + 
+  theme(plot.title = element_text(hjust = 0.5))   + 
+  theme_bw() + theme_light() + 
+  theme(axis.line = element_line(colour = "gray40", 
+                                 size = .5, linetype = "solid")) 
+
+
+PM10 <- ggplot(pte_Aranda, aes(x = Month, y = PM10)) + 
+  stat_boxplot(geom = "errorbar") +
+  geom_boxplot(fill = "gray96", size = .6, outlier.size = 1., outlier.color = "gray40") + 
+  xlab(NULL) +
+  ylab(expression("PM10"~"("*mu*g/m^3*")"))+ 
+  theme(axis.text.x = element_text(angle = 90)) + 
+  theme(plot.title = element_text(hjust = 0.5))  + 
+  theme_bw() + theme_light() + 
+  theme(axis.line = element_line(colour = "gray40", 
+                                 size = .5, linetype = "solid"))                       
+
+
+O3 <- ggplot(pte_Aranda, aes(x = Month, y = OZONO)) + 
+  stat_boxplot(geom = "errorbar") +
+  geom_boxplot(fill = "gray96", size = .6, outlier.size = 1., outlier.color = "gray40") + 
+  scale_x_discrete(name="Meses", labels = c("", "Febr", "", "", 
+                                             "May", "", "", "Aug", 
+                                             "", "", "Nov", "")) + 
+  ylab("O3 (ppb)")+ 
+  theme(axis.text.x = element_text(angle = 0)) + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme_bw() + theme_light() + 
+  theme(axis.line = element_line(colour = "gray40", 
+                                 size = .5, linetype = "solid"))
+
+
+NO2 <- ggplot(pte_Aranda, aes(x = Month, y = NO2)) + 
+  stat_boxplot(geom = "errorbar") +
+  geom_boxplot(fill = "gray96", size = .6, outlier.size = 1., outlier.color = "gray40") + 
+  scale_x_discrete(name="Meses", labels = c("", "Febr", "", "", 
+                                             "May", "", "", "Aug", 
+                                             "", "", "Nov", "")) + 
+  ylab("NO2 (ppb)")+ 
+  theme(axis.text.x = element_text(angle = 0)) + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme_bw() + theme_light()  + 
+  theme(axis.line = element_line(colour = "gray40", 
+                                 size = .5, linetype = "solid"))
+
+
+guay <- ggarrange(Te + rremove("x.text"), PM10 + rremove("x.text"),O3, NO2, 
+          labels = c("A", "B", "C", "D"),
+          ncol = 2, nrow = 2)
+annotate_figure(guay)
+```
+
+
+
+La base de datos trabajada se logra a partir de la transformacion de los datos horarios a mensuales, mediante el promedio del total de registros por cada mes. De esta manera, es posible visualizar mejor el comportamiento que suele tener cada variable durante el año. al observar los boxplot obtenidos, se observa que existe una relacion cercana y positiva entre dos de los tres contaminantes (NO2 y PM10) y la temperatura, mostrando un comportamiento oscilatorio dependiendo de la epoca del año, teniendo picos en los meses de marzo y noviembre. Mientras que con el ozono ocurre una oscilacion desfasada, posiblemente a una relacion inversa entre estos.
+
+### __3. Analisis series temporales__
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Ahora bien, para poder lograr los pronosticos deseados de la temperatura, procederemos a dividir el analisis en dos: una serie temporal univariada de la temperatura mensual mediante un modelo ARIMA a partir de la metodologia Box - Jenkins; y una serie temporal multivariada junto a los contaminantes. Al final compararemos los resultados.
+
+
+#### __3.1 Analisis univariado__
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Una vez descrita la variable Temperatura, procederemos a generar la serie temporal que se usara para realizar el pronostico univariado. Se realizara mediante la funcion `ts`.
+
+```{r}
+
+Te <- ts(pte_Aranda$Temperature, start = c(2009, 1), frequency = 12)
+print(head(Te, 36))
+acf(Te, lag.max = 30)
+pacf(Te, lag.max = 30)
+ndiffs(Te)
+nsdiffs(Te)
+
+
+ggplot(pte_Aranda, aes(x = DateTime, y = Temperature)) +
+  geom_line(color = "darkorange3") + 
+  theme(axis.line = element_line(colour = "grey", 
+                      size = 1, linetype = "solid")) + 
+  ylab(parse(text = "Temperature ~~ group('(', degree * C, ')')")) +
+  xlab("Years") + 
+  ggtitle("Monthly Temperature 2009-2019 Bogota from Puente Aranda station")
+
+
+```
+
+
+Segun la serie obtenida, tenemos la presencia de una periodicidad no estacional repetida cada cinco años. Ademas, la serie tiene una tendencia oscilatoria que parece moverse al rededor de los 14,3 grados centrigrados aproximadamente, lo que podria indicar ausencia de tendencia. Sin embargo, veremos sus componentes por separado mediante la funcion `autoplot`.
+
+
+```{r}
+autoplot(stl(Te, s.window = 'periodic'))
+```
+
+
+Mirando los componentes por separado se confirma un ciclo muy marcado de cinco años de manera oscilatoria y de la presencia de estaciones lo que podria traducirse en que la serie no seria estacionaria. 
+
+\
+Antes de comenzar con cualquier pronostico, es importante asegurarnos de si la serie es estacionaria en media o no, y de si de requiere de alguna transformacion lineal de sus datos. En ese orden de ideas, mediante una prueba de Dickey-Fuller podremos estar seguros de si nuestra serie ya es estacionaria o no. El test tiene las siguientes hipotesis:
+\
+
+
+H0: la serie no es estacionaria.\
+H1: la serie es estacionaria.
+
+
+```{r,warning=FALSE,message=FALSE,error=FALSE}
+adf.test(Te)
+```
+
+De esta manera, se comprueba que la serie efectivamente no es estacionaria. Para lograr la estacionariedad en media, se generara la diferenciacion de la serie; y segun un analisis de Box-Cox, observaremos si requerimos de alguna suavizacion de los datos para reducir la varianza a un valor constante.
+\
+iniciaremos con la funcion de Box-Cox:
+```{r}
+BoxCox.ar(Te)
+```
+
+
+Efectivamente se recomienda realizar un suavizado de los datos. La funcion la determina el valor de alpha, en este caso, $\alpha \approx 0$, por lo que la funcion aplicada sera el logaritmo.
+
+Ahora, procederemos a lograr la estacionariedad en la variable temperatura asi:
+
+```{r}
+
+#Te <- ts(diff(log(pte_Aranda$Temperature), 2), start = c(2009, 1), frequency = 12)
+#fit <- auto.arima(Te)
+
+#print(tail(Te, 35))
+
+#adf.test(Te)
+
+#autoplot(Te) +
+  #geom_line(color = "darkorange3") + 
+  #theme(axis.line = element_line(colour = "grey", 
+   #                   size = 1, linetype = "solid")) + 
+  #ylab(parse(text = "diff(log(Temp))")) +
+  #xlab("Years") + 
+  #ggtitle("differenciate log(temperature)")
+
+```
+
+De esta manera logramos la estacionariedad de nuestra serie de temperaturas.
+
+
+Una vez obtenida la serie de la transformacion, procederemos a generar un modelo ARIMA que nos permita pronostica a partir de la serie temporal generada, el autocorrelograma es una herramienta que nos permitira obtener pistas sobre los parametros que podria tomar el modelo, aunque tambien podemos visualizar el autocorrelograma parcial.
+
+
+```{r}
+
+#par(mfrow=c(1,2))
+
+#acf(Te, main = parse(text = "Transf-Temperatura"), col="gray47", lag.max = 15)
+#pacf(Te, main = parse(text = "Transf-Temperatura"), col="gray47", lag.max = 15)
+
+ 
+```
+
+El autocorrelograma muestra un comportamiento de ruido blanco optimo, caracteristico de las series estacionarias, pero no solo eso, sino que su comportamiento parece mostrar similitud con correlogramas de modelos de mevia movil de primer nivel, es decir, un ARIMA (0,0,1), ya que presenta coeficientes de correlacion muy bajos,y cuyo coeficiente podria ser positivo, aunque no es muy claro el comportamiento del primer resago.
+
+
+Sin embargo, haremos uso de la funcion `auto.arima` para estar seguros sobre el modelo que podria ajustarse.  
+
+```{r}
+
+# diff(2) + log
+Te <- ts(diff(log(pte_Aranda$Temperature), differences = 2),
+         start = c(2009, 1), frequency = 12)
+Te <- log(pte_Aranda$Temperature)
+
+auto.arima(Te)
+fit
+
+sarima <- Arima(Te, order=c(5,0,0), seasonal = list(order = c(2,0,0)),
+                 method='ML', include.mean = TRUE)
+# Diagnostico
+acf(residuals(sarima), main = 'ACF Residuales ARIMA(5,2,0)(2,0,0)[12]')
+tsdiag(sarima, gof=15, omit.initial=F)
+autoplot(sarima)
+qqnorm(residuals(sarima), main = 'Q-Q Plot AR(3)'); qqline(residuals(sarima))
+shapiro.test(residuals(sarima))
+Box.test(resid(sarima), type="Ljung", lag=9, fitdf=1)
+
+#pron <- forecast.Arima(sarima, h = 12)
+pred <- predict(sarima, n.ahead = 12, ci = 0.95)
+
+autoplot(Te) +
+  geom_line(color = "black", size = 0.3)+
+  autolayer(pred$pred, color = "red")+
+  xlab("Years") +
+  ylab(parse(text = "stacionary(T)")) +
+  theme_bw() + theme_light() +
+  theme(axis.line = element_line(colour = "gray40",
+                                 size = .5, linetype = "solid"))  +
+  ggtitle("Forecast from SARIMA(5,2,0)(2,0,0)[12]")
+
+#autoplot(pron)
+```
+
+
+La funcion auto.arima nos arroja un modelo ARIMA(5,0,0)(0,0,2), es decir, un nivel de diferenciacion y un  media movil de primer nivel. Muy distinto al planteado con anterioridad, y que, al parecer, seria el que mejor se ajusta a la serie de temperaturas transformadas. 
+
+
+```{r}
+
+#autoplot(forecast(fit, h = 12))
+#autoplot(forecast(fit1, h = 12))
+
+
+
+```
+
+Sin embargo, es complicado de obtener. Por otro lado, podriamos intentar ajustar un modelo Holt Winters, optimo para tratar con este tipo de series con alta estacionalidad. Finalmente, con la funcion `forecast` realizaremos el pronostico de, al menos, 12 meses en el futuro.
+
+```{r}
+
+#pte_Aranda_HW <- HoltWinters(Te)
+#forecast <- predict(pte_Aranda_HW, n.ahead = 12, prediction.interval = T, level = 0.95)
+#plot(pte_Aranda_HW, forecast)
+
+
+```
+
+El metodo Holt-Winters es un metodo de pronostico de triple exponente suavizante y tiene la ventaja de ser
+fácil de adaptarse a medida que nueva informacion real esta disponible.
+Podemos concluir que el modelo Holt Winters se ajusta muy bien a la serie original, permitiendo pronosticos coherentes de temperatura en los meses futuros. Posteriormente se buscara realizar un analisis de residuos de los pronosticos.\
+\
+
+
+#### __3.2 Analisis multivariado__
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Para esta seccion completa, es fundamental presentar series de tiempo completas, es decir, sin datos ausentes. Con anterioridad se realizo el analisis del porcentaje de datos completos que cada variable tenia y los resultados fueron los siguientes: 
+
+```{r, echo=FALSE}
+
+
+pte_Aranda_F <- read.csv(paste(inpath,"pte_aranda_full.csv", sep = ""))
+pte_Aranda_F$DateTime <- ymd(pte_Aranda_F$DateTime)
+```
+
+
+Temperature | PM10 | OZONO | NO2
+-- | -- | -- | --
+100 | 100 | 95.45 | 84.85
+
+
+De la tabla se observa que hay dos contaminantes que no tienen registros completos, lo que dificulta la eficacia del analisis de la serie multivariada debido al subregistro. Lo que podemos hacer es llenar estos datos faltantes con la media o la mediana por mes, dependiendo del comportamiento de sus outliers. Remitiendonos nuevamente a la figura con los boxplot, se observa que los outliers son significativos, por lo que seria  util utilizar la mediana como metodo de relleno. 
+
+Una vez completos los datos, procedemos a observar la relacion entre las variables mediante un grafico de correlacion.
+
+```{r fig.align="center"}
+
+#rampa de color generada
+pal <- colorRampPalette(c( "lavenderblush", "oldlace","tan", "linen","gray44"))
+
+corrplot(cor(pte_Aranda_F[,2:5]), method = "square", type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 010, is.corr = T, addCoef.col = F, col = pal(30),
+         addCoefasPercent = T)
+
+
+```
+
+Del grafico de correlacion podemos observar que la correlacion lineal de la temperatura con los tres contaminantes es relativamente baja, por lo que estas variables tienen un tipo de relacion distinta a lineal. Ademas, observamos una relacion de linearidad algo fuerte entre las particulas menores a 10 micras (PM10) y el NO$_2$ quizas debido a su origen antropogenico comun
+
+Ahora bien, definiremos las series temporales de los tres contaminantes, donde sera utilizada la diferenciacion en primer nivel para lograr su estacionariedad en media. 
+
+```{r}
+
+#PM10 <- ts(diff(log(pte_Aranda_F$PM10), differences = 2), start = c(2009, 1), frequency = 12)
+#O3 <- ts(diff(log(pte_Aranda_F$OZONO), differences = 2), start = c(2009, 1), frequency = 12)
+#NO2 <- ts(diff(pte_Aranda_F$NO2, differences = 2), start = c(2009, 1), frequency = 12)
+
+Temp <- ts(diff(pte_Aranda_F$Temperature, differences = 1), start = c(2009, 1), frequency = 12)
+PM10 <- ts(diff(pte_Aranda_F$PM10, differences = 1), start = c(2009, 1), frequency = 12)
+O3 <- ts(diff(pte_Aranda_F$OZONO, differences = 1), start = c(2009, 1), frequency = 12)
+NO2 <- ts(diff(pte_Aranda_F$NO2, differences = 1), start = c(2009, 1), frequency = 12)
+multi <- cbind(Temp, PM10, O3, NO2)
+roots(var2)
+knitr::kable(head(multi, 7), booktaps = TRUE,
+             caption = "")
+plot.ts(multi, main = 'Transf. Temp, PM10, O3')
+```
+
+##### 3.2.1 Especificacion
+
+La especificacion del modelo vectorial autorregresivo se realizara mediante la funcion `VARselect` del paquete `vars`. Se trabaja con series I(1) debido a que las series originales solo sugerian un orden de modelo VAR(1), el cual no es posible de trabajar con un modelo VEC.
+
+```{r, warning=FALSE,message=FALSE,error=FALSE}
+library(dse) 
+library(vars) 
+library(fUnitRoots)
+
+VARselect(multi, lag.max = 4, type = 'const', season = 12)
+
+
+```
+
+La funcion nos arroja informacion a partir de los criterios AIC, HQ, SC y FPE a partir de la inclusion de dummies estacionales. El orden de dos de cuatro de ellos (AIC y FPE) es $p$ = 2. Así, procederemos a generar el modelo VAR(2) para realizar el correspondiente diagnostico.
+
+##### 3.2.2 Estimacion
+
+A continuacion, se procede a estimar los parametros generados por ambos modelos VAR. El paquete `fUnitRoots` nos permite obtener los valores propios del modelo generado mediante la funcion `roots()`, lo ideal es que los valores arrojados por esta funcion sean menores a 1. 
+
+```{r}
+library(vars)
+var2 <- VAR(multi, p = 2, type = "both", season = 12)
+summary(var2)
+roots(var2)
+var2$restrictions
+causeALL_Te <- irf(var2, response = 'Temp', n.ahead = 10,
+              ortho = FALSE, cumulative = FALSE,
+              boot = FALSE, seed = 12345) 
+causeALL_Te$impulse
+
+```
+
+##### 3.2.3 Diagnostico
+
+El paquete `vars` presenta una serie de test estadisticos que permiten probar supuestos como la correlacion, la heteroscedasticidad y la normalidad; y así realizar el diagnostico de una manera muy intuitiva y directa. Para medir la correlacion, utilizaremos el test de Portmanteau, el cual trabaja con los residuales del modelo bajo las siguientes hipotesis:
+
+H$_0$: R$_1$ = R$_2$ = ... = R$_m$ = 0 \
+H$_1$: R$_j$ $\neq$ 0 para 1 $\leq$ j $\leq$ m \
+
+donde R$_j$ es la matriz de correlacion cruzada del resago $j$.
+
+```{r}
+
+# Testeando correlación VAR(3)
+serial.test(var2, lags.pt = 10, type = 'PT.asymptotic')
+
+```
+
+El test de Portmanteau nos indica que efectivamente no hay correlacion en los residuos no rechazandose H$_0$.
+
+Ahora bien, procederemos a testear la heteroscedasticidad. Para esto, utilizaremos la funcion `arch.test()` el cual esta basado en el test de ARCH-LM en donde se plantea las siguientes hipotesis:
+
+H$_0$: B$_1$ = B$_2$ = ... = B$_q$ = 0 \
+H$_1$: B$_1$ $\neq$ 0 $\cap$ B$_2$ $\neq$ 0 $\cap$ ... B$_m$ $\neq$ 0   \
+
+donde R$_j$ es la matriz de correlacion cruzada del resago $j$.
+
+```{r}
+
+# Testeando heteroscedasticidad VAR(2)
+arch.test(var2, lags.multi = 6, multivariate.only = TRUE)
+
+```
+
+Lo que nos indica el test de ARCH es que si hay homoscedasticidad en los residuos y no se rechaza H$_0$.
+
+Finalmente testearemos la normalidad de los residuos mediante el test de Jarque-Bera con la funcion `normality.test()`, la cual analiza, mediante tres pruebas por separado, atributos propios de la normalidad como el sesgo y la kurtosis. Las siguientes hipotesis son probadas en cada test realizado por la funcion.
+
+H0: los residuos estandarizados siguen una distribucion normal.\
+H1: los residuos estandarizados no siguen una distribucion normal
+
+```{r}
+
+# Testeando normalidad de residuos VAR(2)
+normality.test(var2, multivariate.only = TRUE)
+
+```
+
+El test de Jarque-Bera indica que los residuos del modelo presentan una distribucion normal, por lo que no se rechaza H$_0$.
+
+##### 3.2.3 Causalidad
+
+Bajo el supuesto de causalidad de Granger, la funcion `causality()` del paquete `vars` permite determinar mediante un test si existe suficiente evidencia para afirmar que una variable especificada es causal de las demas. Las hipotesis son la siguientes:
+
+
+H0: Y$_{it}$ no tiene causalidad de Granger sobre los demas Y$_{t}$. \
+H1: Y$_{it}$ tiene causalidad de Granger sobre los demas Y$_{t}$.
+
+`causality()` tambien realiza la prueba de causalidad instantanea definida por:
+
+H0: C$_{\sigma}$ = 0. \
+H1: C$_{\sigma}$ $\neq$ 0.
+
+```{r}
+
+# Testeando causalidad VAR(2)
+causality(var2, cause = "PM10")
+causality(var2, cause = "Temp")
+causality(var2, cause = "O3")
+causality(var2, cause = "NO2")
+
+```
+
+```{r}
+
+Temp <- ts(diff(log(pte_Aranda_F$Temperature), differences = 1), start = c(2009, 1), frequency = 12)
+PM10 <- ts(diff(log(pte_Aranda_F$PM10), differences = 1), start = c(2009, 1), frequency = 12)
+O3 <- ts(diff(log(pte_Aranda_F$OZONO), differences = 1), start = c(2009, 1), frequency = 12)
+NO2 <- ts(diff(log(pte_Aranda_F$NO2), differences = 1), start = c(2009, 1), frequency = 12)
+multi <- cbind(Temp, PM10, O3, NO2)
+
+var2 <- VAR(multi, p = 2, type = "both", season = 12)
+
+predictions <- predict(var2, n.ahead = 12, ci = 0.95)
+predictions$endog
+
+autoplot(predictions, ts.colour = 'black', ts.size = 0.2, 
+         predict.colour = 'red3', predict.linetype = 'dashed',
+         conf.int.fill = "salmon", predict.size = 0.6) + 
+  theme_bw() + theme_light() + 
+  theme(axis.line = element_line(colour = "gray40", 
+                                 size = .5, linetype = "solid"))
+
+
+```
+
+```{r}
+## Analisis de impulso
+causePM_Te <- irf(var2, impulse = 'PM10',
+              response = 'Temp', n.ahead = 10,
+              ortho = FALSE, cumulative = FALSE,
+              boot = FALSE, seed = 12345) 
+plot(causePM_Te)
+
+
+causeTe_PM <- irf(var2, impulse = 'Temp',
+              response = 'PM10', n.ahead = 10,
+              ortho = FALSE, cumulative = FALSE,
+              boot = FALSE, seed = 12345) 
+plot(causeTe_PM)
+```
+
+
+El modelo SVAR permite identificar y rastrear choques de impulso a partir del análisis de impulso-respuesta (IRA) o mediante el estudio del error de predicción de la descomposición de la varianza (FEVD) a través de imponer restricciones en las matrices A o B.

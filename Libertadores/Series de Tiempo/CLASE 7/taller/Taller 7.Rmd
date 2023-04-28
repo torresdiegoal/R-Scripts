@@ -1,0 +1,164 @@
+---
+title: "Taller 7"
+author: "Diego Torres"
+date: "26 de mayo de 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Libreria MTS para datos del PIB del Reino Unido, Canadá y Estados Unidos
+
+```{r, warning=FALSE,message=FALSE,error=FALSE}
+library(TSA)
+library(mvtnorm)
+library(readxl)
+library(data.table)
+library(dplyr)
+library(ggplot2)
+
+rm(list = ls())
+
+inpath  <- "D:/OneDrive - Universidad de Los Andes/R scripts/Libertadores/Series de Tiempo/Datos/"
+outpath <- "D:/OneDrive - Universidad de Los Andes/R scripts/Libertadores/Series de Tiempo/CLASE 7/taller/"
+
+GDP_UKCAUS <- read_excel(paste(inpath,"GDP UK CA US.xlsx", sep = ""))
+print(head(GDP_UKCAUS))
+
+
+# Series trabajadas
+
+gdp<- log(GDP_UKCAUS[,3:5])
+uk <- ts(diff(gdp$uk), start = c(1980, 1), frequency = 4)
+ca <- ts(diff(gdp$ca), start = c(1980, 1), frequency = 4)
+us <- ts(diff(gdp$us), start = c(1980, 1), frequency = 4)
+gdp.ret <- cbind(uk,ca,us)*100
+
+```
+
+### Paquete _vars_
+
+```{r, warning=FALSE,message=FALSE,error=FALSE}
+
+library(vars) 
+
+VARselect(gdp.ret, lag.max = 3 , type = 'const')
+
+### Estimación VAR(1)
+var1 <- VAR(gdp.ret, p = 1, type = "both")
+var1
+```
+
+El diagnostico de un modelo VAR con el paquete `vars` es muy completo, permitiendo realizar un analisis de supuestos que evaluan la correlacion, heteroscedasticidad y normalidad de los residuos. El analisis se realiza con las funciones `serial.test` para la correlacion, `arch.test` para la heteroscedasticidad y `normality.test` para la normalidad. 
+
+```{r}
+
+serial.test(var1, lags.pt = 16, type = "PT.asymptotic")
+
+# Se rechaza H0, hay evidencia de correlacion de los residuos.
+
+arch.test(var1, lags.multi = 5)
+
+# Se acepta H0, los residuos son homoscedasticos
+
+norm <- normality.test(var1)
+norm
+plot(norm, names = "Temp")
+
+# Se rechaza H0, los residuos no siguen una distribucion normal. Viendo la grafica de temperatura, se observa que la media es aproximadamente 0.25.
+```
+
+Una vez realizado el diagnostico del modelo VAR con _vars_, se procede a realizar las funciones de impulso y el pronostico de la descomposición de la varianza residual para así identificar la relación entre las series. La funcion de impulso con el paquete _vars_ se realiza mediante la funcion `irf`, la cual tiene la ventaja de que puede ser utilizada para observar la influencia individual de una variable sobre otra mediante una simple especificacion en los parámetros. Mientras que el pronostico de la descomposición de la varianza se hace mediante la función `fevd`, la cual permite ser ploteada con facilidad para mejor entendimiento de las relaciones de las variables en el tiempo.
+
+```{r}
+## Analisis de impulso
+irf.y12 <- irf(var1, impulse = 'uk',
+              response = 'ca', n.ahead = 10,
+              ortho = FALSE, cumulative = FALSE,
+              boot = FALSE, seed = 12345) 
+plot(irf.y12)
+
+## Pronostico descomosición de la varianza
+fevd.var2 <- fevd(var1, n.ahead = 10) 
+plot(fevd.var2, addbars = 3)
+```
+
+
+### Paquete _MTS_
+
+MTS es un paquete general que permite analizar series de tiempo multivariadas lineales, pero que requiere un alto costo computacional, poco intuitivo y, por lo tanto, poco objetivo; por lo que no es un paquete muy recomendado para iniciarse en series multivariadas.
+
+```{r, warning=FALSE,message=FALSE,error=FALSE}
+
+unloadNamespace("vars") # eliminar el paquete de la memoria
+library(MTS)
+
+MTSplot(gdp.ret)
+
+VARorder(gdp.ret)
+
+criterios <- data.frame(cbind(round(0:13,0),VARorder(gdp.ret)$aic,
+                              VARorder(gdp.ret)$bic,
+                              VARorder(gdp.ret)$hq))
+names(criterios) <- c('p', 'AIC', 'BIC', 'HQ')
+
+plot.crite <- data.frame(rbind(cbind(round(0:13,0), 'AIC', VARorder(gdp.ret)$aic),
+                               cbind(round(0:13,0), 'BIC', VARorder(gdp.ret)$bic),
+                               cbind(round(0:13,0), 'HQ', VARorder(gdp.ret)$hq)))
+names(plot.crite) <- c('p', 'Criterio', 'Valores')
+plot.crite$p       <- as.numeric(as.character(plot.crite$p)) 
+plot.crite$Valores <- as.numeric(as.character(plot.crite$Valores)) 
+
+```
+
+
+Siguiendo la metodología de Box-Jenkins se tiene que la especificación del modelo VAR es un _p_ = 2, siendo el que mejor se ajusta teniendo en cuenta los criterios de AIC, BIC y HQ. El paquete MTS permite observar el "punto de quiebre" comun de los tres criterios de una manera grafica a partir de los resultados de la funcion `VARorder` , sin embargo, su manejo no es muy comodo y sus resultados tampoco son concluyentes.
+
+```{r}
+ggplot(plot.crite, aes(x = p,y = Valores, group = Criterio)) + 
+  geom_line(aes(color = Criterio))
+
+```
+
+La grafica confirma que el orden del modelo VAR es 2. Así, tenemos que la estimación por máxima verosimilitud utilizando la función VAR es igual a:
+
+```{r}
+modelo <- VAR(gdp.ret, 2)
+```
+
+En cuanto al diagnostico, el paquete MTS no incluye test propios aplicados a objetos de tipo `var` o similares para determinar un analisis de los residuos, lo cual es una clara desventaja frete al paquete `vars`. Para determinar la posible correlacion de los residuos, se hace de manera grafica mediante la funcion `mq`, la cual genera estadisticos de Ljung-Box multivariados para matrices de correlacion cruzada.
+
+```{r}
+resi <- modelo$residuals
+mq(resi,adj=18)
+```
+
+Una de las ventajas en cuanto al diagnostico del modelo con `MTS` es que permite refinar el modelo en caso de que este no cumpla con los supuestos, eliminando parametros no significativos. Posteriormente, la funcion `MTSdiag` genera un diagnostico con una alta carga computacional, un poco extenso y no tan visible.
+
+```{r}
+modelo.2 <- refVAR(modelo, thres = 1.96)
+
+MTSdiag(modelo.2, adj=12)
+```
+
+Otro aspecto importante del paquete MTS es su singularidad para generar funciones de impulso y descomposición de varianza residual, ya que requiere de un componente teorico mayor para entender los parametros de entrada que piden las funciones  `VARirf` y `FEVdec`.
+
+```{r}
+
+# funciones de impulso
+Phi <- modelo.2$Phi 
+Sig <- modelo.2$Sigma
+VARirf(Phi,Sig) 
+
+### Descompisición de la varianza
+Theta <- NULL
+FEVdec(Phi,Theta,Sig,lag=5)
+
+```
+
+### __Conclusiones__
+
+En conclusión, el paquete `vars` permite una evaluación más directa de los modelos multivariados vectoriales, ya que nos permite llegar a resultados interpretables de una manera más directa mediante funciones más concretas. El paquete _MTS_ permite simular una mayor cantidad de modelos multivariados y es un paquete más especializado y con mayor fundamento teórico detrás de sus funciones. Para principiantes, se recomienda el paquete `vars`. 

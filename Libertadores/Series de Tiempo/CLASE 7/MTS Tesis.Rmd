@@ -1,0 +1,127 @@
+---
+title: "MTS"
+author: "Diego Torres"
+date: "30 de mayo de 2020"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(lubridate)
+library(ggplot2)
+library(ggfortify)
+library(mvtnorm)
+library(forecast)
+
+
+# ctrl + shift + c para comentar varias lineas
+rm(list = ls())
+
+inpath  <- "D:/OneDrive - Universidad de Los Andes/R scripts/Libertadores/Series de Tiempo/Datos/"
+outpath <- "D:/OneDrive - Universidad de Los Andes/R scripts/Libertadores/Series de Tiempo/CLASE 7/"
+
+unloadNamespace("vars") # eliminar el paquete de la memoria
+library(MTS)
+
+pte_Aranda_F <- read.csv(paste(inpath,"pte_aranda_full.csv", sep = ""))
+pte_Aranda_F <- pte_Aranda_F[2:5]
+
+Temp <- ts(pte_Aranda_F$Temperature, start = c(2009, 1), frequency = 12)
+PM10 <- ts(pte_Aranda_F$PM10, start = c(2009, 1), frequency = 12)
+O3 <- ts(pte_Aranda_F$OZONO, start = c(2009, 1), frequency = 12)
+NO2 <- ts(pte_Aranda_F$NO2, start = c(2009, 1), frequency = 12)
+multi <- cbind(Temp, PM10, O3, NO2)
+
+#### VAR(2) ####
+#var2 <- VAR(multi, p = 2, type = "both", season = 12)
+var2MTS <- VAR(multi, 2)
+```
+
+```{R}
+
+rm(list = ls())
+
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(ggpubr)
+library(corrplot)
+library(tseries)
+library(ggfortify)
+library(TSA)
+#library(MTS)
+library(mvtnorm)
+library(forecast)
+
+inpath  <- "D:/Disco D/R/Datos/Series de Tiempo/CLASE 3/taller/inpath/"
+outpath <- "D:/Disco D/R/Datos/Series de Tiempo/CLASE 3/taller/outpath/"
+
+
+pte_Aranda <- read.csv(paste(inpath,"PteAranda_mensual.csv", sep = ""))
+pte_Aranda$DateTime <- ymd(pte_Aranda$DateTime)
+pte_Aranda$Month <- as.factor(month(pte_Aranda$DateTime))
+
+Te <- ggplot(pte_Aranda, aes(x = Month, y = Temperature)) + 
+  stat_boxplot(geom = "errorbar") +
+  geom_boxplot(fill = "gray96", size = .6, outlier.size = 1., outlier.color = "gray40") + 
+  xlab(NULL) +
+  ylab(parse(text = "Temperature ~~ group('(', degree * C, ')')")) + 
+  theme(axis.text.x = element_text(angle = 90)) + 
+  theme(plot.title = element_text(hjust = 0.5))   + 
+  theme_bw() + theme_light() + 
+  theme(axis.line = element_line(colour = "gray40", 
+                                 size = .5, linetype = "solid")) 
+
+
+PM10 <- ggplot(pte_Aranda, aes(x = Month, y = PM10)) + 
+  stat_boxplot(geom = "errorbar") +
+  geom_boxplot(fill = "gray96", size = .6, outlier.size = 1., outlier.color = "gray40") + 
+  xlab(NULL) +
+  ylab(expression("PM10"~"("*mu*g/m^3*")"))+ 
+  theme(axis.text.x = element_text(angle = 90)) + 
+  theme(plot.title = element_text(hjust = 0.5))  + 
+  theme_bw() + theme_light() + 
+  theme(axis.line = element_line(colour = "gray40", 
+                                 size = .5, linetype = "solid"))                       
+
+
+O3 <- ggplot(pte_Aranda, aes(x = Month, y = OZONO)) + 
+  stat_boxplot(geom = "errorbar") +
+  geom_boxplot(fill = "gray96", size = .6, outlier.size = 1., outlier.color = "gray40") + 
+  scale_x_discrete(name="Meses", labels = c("", "Febr", "", "", 
+                                             "May", "", "", "Aug", 
+                                             "", "", "Nov", "")) + 
+  ylab("O3 (ppb)")+ 
+  theme(axis.text.x = element_text(angle = 0)) + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme_bw() + theme_light() + 
+  theme(axis.line = element_line(colour = "gray40", 
+                                 size = .5, linetype = "solid"))
+
+
+NO2 <- ggplot(pte_Aranda, aes(x = Month, y = NO2)) + 
+  stat_boxplot(geom = "errorbar") +
+  geom_boxplot(fill = "gray96", size = .6, outlier.size = 1., outlier.color = "gray40") + 
+  scale_x_discrete(name="Meses", labels = c("", "Febr", "", "", 
+                                             "May", "", "", "Aug", 
+                                             "", "", "Nov", "")) + 
+  ylab("NO2 (ppb)")+ 
+  theme(axis.text.x = element_text(angle = 0)) + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme_bw() + theme_light()  + 
+  theme(axis.line = element_line(colour = "gray40", 
+                                 size = .5, linetype = "solid"))
+
+
+guay <- ggarrange(Te + rremove("x.text"), PM10 + rremove("x.text"),O3, NO2, 
+          labels = c("A", "B", "C", "D"),
+          ncol = 2, nrow = 2)
+annotate_figure(guay)
+
+```
+
