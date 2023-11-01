@@ -126,13 +126,20 @@ res.PCA = PCA(base_propension[,c(1:last_col-1)],
 #base_propension_PCA$var
 
 
+
 # Creamos la nueva base con las componentes resultantes del PCA y le anexamos el campo a predecir> CLIENTE
 base_propension_PCA <-data.frame(res.PCA$ind$coord, 
                                  CLIENTE = base_propension$CLIENTE) #%>% 
 #dplyr::rename(CLIENTE = train.CLIENTE)
 
-# U <- res.PCA$svd$U
-# V <- res.PCA$svd$V
+write.table(base_propension_PCA,
+            file = 'C:/Users/Diego Torres/OneDrive/Datasets/Base_ROC.csv',
+            fileEncoding = 'UTF-8',
+            row.names = F,
+            quote = F, #omite las comillas de cada elemento del output
+            sep = ',',
+            dec = '.',
+            na = '-')
 
 
 # Split the data into training and test set
